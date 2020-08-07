@@ -10,5 +10,5 @@ class Fitness:
         self.distance = [0.0] * N
         self.fitness = 0.0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Fitness(error:{self.total_error}, rawfitness:{self.rawfitness})"

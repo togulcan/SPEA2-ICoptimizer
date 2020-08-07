@@ -1,12 +1,14 @@
 from math import ceil
 import numpy as np
 from random import randrange, uniform
+from typing import Type
+
 
 from .generation import Generation
 from .individual import Individual
 
 
-def _single_mating(gen: Generation) -> Individual:
+def _single_mating(gen: Type["Generation"]) -> Individual:
     """ Choose a parent from archive randomly """
     p1 = ceil(randrange(gen.N))
     p2 = ceil(randrange(gen.N))
