@@ -1,0 +1,51 @@
+# configs.yaml
+
+Circuit:
+  name: amp
+  type: analog
+  transistor_number: 6
+  path_to_circuit: circuitfiles/amp/
+  path_to_output: data/amp/
+  technology_L: 130.0e-9
+  topology:
+    - LM1
+    - LM2
+    - LM3
+    - WM1
+    - WM2
+    - WM3
+    - Ib
+  upper_bound:
+    - 130.0e-8
+    - 130.0e-8
+    - 130.0e-8
+    - 975.0e-7
+    - 975.0e-7
+    - 975.0e-7
+    - 1.0e-3
+  lower_bound:
+    - 130.0e-9
+    - 130.0e-9
+    - 130.0e-9
+    - 650.0e-9
+    - 650.0e-9
+    - 650.0e-9
+    - 10.0e-6
+  output:
+    - gain
+    - bw
+    - himg
+    - hreal
+    - zsarea
+
+SPEA2:
+  maximum_generation: 300
+  N: 300 #number of individual per generation
+  targets:
+    - gain: max #this parameter will be maximized
+    - bw: max #this parameter will be maximized
+  constraints:
+    pm:
+      min: 45
+    zsarea:
+      max: 5.0e-9
