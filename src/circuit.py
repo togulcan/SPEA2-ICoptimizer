@@ -1,18 +1,18 @@
-import math
 import numpy as np
 from abc import ABCMeta, abstractmethod
-from typing import List, Union
-from decimal import Decimal, getcontext
+from typing import Union, List
 
-# from .simulators import HSpiceSimulator, SimulationFailedError
-# from .utilfuncs import add_two, mul_two
-from config import configs
 from .simulators import HSpiceSimulator, SimulationFailedError
+
+__all__ = [
+    "Circuit", "AnalogCircuit", "DigitalCircuit",
+    "CircuitCreator", "RandomInitializer",
+    "QuasiMonteCarloInitializer", "NormalInitializer"
+]
 
 
 class Circuit(metaclass=ABCMeta):
-
-    PROPERTIES = configs.get("CIRCUIT")
+    PROPERTIES = None
 
     def __init__(self,
                  parameters: Union[List[float], List[int], np.ndarray]):
@@ -21,12 +21,13 @@ class Circuit(metaclass=ABCMeta):
                 f"Parameters should be list of float or instance of ndarray.")
         elif len(parameters) != len(self.PROPERTIES["TOPOLOGY"]):
             raise ValueError(
-                f"Length of the paramaters and topology are not the same.")
+                f"Length of the parameters and topology are not the same.")
         elif any(map(
                 lambda x: not isinstance(x, (float, int, np.longdouble)), parameters)):
             raise TypeError(
                 f"Parameters should be list of float or int!")
 
+        self.t_values = None
         self.parameters = np.array(parameters, dtype=np.longdouble)
         self.parameters.flags.writeable = False
 
@@ -43,43 +44,35 @@ class Circuit(metaclass=ABCMeta):
         return hash(tuple(self.parameters))
 
     def __eq__(self, other):
-        return (self.parameters == other.parameters).all()
+        return self.parameters == other.parameters
 
     def __add__(self, obj):
         """Operator overloading for adding two Circuit."""
-
         if not isinstance(self, type(obj)):
             raise TypeError(f"Can not add {type(self).__name__} type "
                             f"with {type(obj).__name__} type.")
-
         return type(self).__call__(
             np.add(self.parameters, obj.parameters))
 
     def __sub__(self, obj):
         """Operator overloading for subtracting two Circuit."""
-
         if not isinstance(self, type(obj)):
             raise TypeError(f"Can not add {type(self).__name__} type "
                             f"with {type(obj).__name__} type.")
-
         return type(self).__call__(
             np.subtract(self.parameters, obj.parameters))
 
     def __mul__(self, obj):
         """Operator overloading for multiplying a Circuit with a constant."""
-
         if isinstance(obj, (float, int)):
             return type(self).__call__(self.parameters * obj)
-
         raise TypeError(f"Can not multiply {type(self).__name__} type"
                         f"with {type(obj).__name__} type.")
 
     def __div__(self, obj):
         """Operator overloading for dividing a Circuit by a constant."""
-
         if isinstance(obj, (float, int)):
             return type(self).__call__(self.parameters / obj)
-
         raise TypeError(f"Can not multiply {type(self).__name__} type"
                         f"with {type(obj).__name__} type.")
 
@@ -98,7 +91,7 @@ class AnalogCircuit(Circuit):
 
     def HSPICE_simulate(self, path, lock=None):
 
-        # create a simulater object
+        # create a simulator object
         hspice_simulator = HSpiceSimulator(
             path, self.PROPERTIES["NAME"])
 
@@ -107,7 +100,7 @@ class AnalogCircuit(Circuit):
             self.PROPERTIES["TOPOLOGY"], self.parameters)
 
         # run Hspice to output the results
-        hspice_simulator.run_hspice()
+        hspice_simulator.simulate()
 
         # read .ma0 and parse gain, bw, himg, hreal, tmp
         outputs = hspice_simulator.read_ma0()
@@ -131,9 +124,10 @@ class AnalogCircuit(Circuit):
             else:
                 self.HSPICE_simulate(path)
         except SimulationFailedError:
-            raise 
+            raise
         except Exception as e:
-            raise RuntimeError(f"Unexpected error occured!") from e 
+            raise RuntimeError(f"Unexpected error occured!") from e
+
 
 class DigitalCircuit(Circuit):
 
@@ -151,9 +145,9 @@ class DigitalCircuit(Circuit):
             else:
                 self.HSPICE_simulate(path)
         except SimulationFailedError:
-            raise 
+            raise
         except Exception as e:
-            raise RuntimeError(f"Unexpected error occured!") from e 
+            raise RuntimeError(f"Unexpected error occured!") from e
 
     def HSPICE_simulate(self, path: str, lock=None):
 
@@ -166,7 +160,7 @@ class DigitalCircuit(Circuit):
             self.PROPERTIES["TOPOLOGY"], self.parameters)
 
         # run Hspice to output the results
-        hspice_simulator.run_hspice()
+        hspice_simulator.simulate()
 
         # read ma0 and parse power, area, temper
         outputs = hspice_simulator.read_mt0()
@@ -202,7 +196,7 @@ class CircuitCreator(metaclass=ABCMeta):
 class RandomInitializer(CircuitCreator):
 
     @classmethod
-    def _create(cls, circuit_type: str) -> Circuit:
+    def _create(cls, circuit_type: str, params=None) -> Circuit:
 
         upper_bound = Circuit.PROPERTIES['UPPER_BOUND']
         lower_bound = Circuit.PROPERTIES['LOWER_BOUND']
@@ -222,14 +216,18 @@ class RandomInitializer(CircuitCreator):
 
 
 class QuasiMonteCarloInitializer(CircuitCreator):
-    pass
+
+    @classmethod
+    @abstractmethod
+    def _create(cls, circuit_type, params=None):
+        pass
 
 
 class NormalInitializer(CircuitCreator):
 
     @classmethod
     def _create(cls, circuit_type: str,
-                params: Union[List[float], List[int], np.ndarray]) -> Circuit:
+                params: Union[List[float], List[int], np.ndarray] = None) -> Circuit:
         if circuit_type == 'analog':
             return AnalogCircuit(params)
         elif circuit_type == 'digital':
