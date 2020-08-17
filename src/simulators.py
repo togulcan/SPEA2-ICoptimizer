@@ -1,5 +1,5 @@
 import os
-import sys
+from abc import ABCMeta, abstractmethod
 
 
 class SimulationFailedError(BaseException):
@@ -15,8 +15,15 @@ class SimulationFailedError(BaseException):
             return f"{self.message}"
 
 
-class HSpiceSimulator:
-    
+class BaseSimulator(metaclass=ABCMeta):
+
+    @abstractmethod
+    def simulate(self):
+        pass
+
+
+class HSpiceSimulator(BaseSimulator):
+
     def __init__(self, path: str, circuit_name: str):
         self.path = path
         self.circuit_name = circuit_name
@@ -25,75 +32,61 @@ class HSpiceSimulator:
         return f"HSpiceSimulator({self.path})"
 
     def simulate(self):
-        pass
+        execution_command = r'start/min/wait /D ' + self.path + \
+                            r' C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' \
+                            + self.circuit_name + '.sp -o ' + self.circuit_name
+        os.system(execution_command)
 
-    def file_reader(self, file_name: str) -> tuple:
-
+    @staticmethod
+    def file_reader(file_name: str) -> tuple:
         with open(file_name, 'r') as f:
             lines = f.readlines()
-
         headers_list = lines[2].split()
         lines_list = lines[3].split()
 
         for header, value in zip(headers_list, lines_list):
-            yield (header, value)
+            yield header, value
 
-    def write_param(self, topology:list, parameters:list):
-        
+    def write_param(self, topology: list, parameters: list):
         with open(self.path + 'param.cir', 'w') as f:
             f.write('.PARAM\n')
             for header, parameter in zip(topology, parameters):
                 f.write('+ ' + header + ' = ' + str(parameter) + '\n')
 
-
-    def run_hspice(self):
-        
-        execution_command = r'start/min/wait /D ' + self.path +\
-                            r' C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe '\
-                            + self.circuit_name + '.sp -o ' + self.circuit_name
-        
-        os.system(execution_command)
-
     def read_ma0(self) -> list:
         """ Read gain, bw, himg, hreal, tmp from .ma0 file"""
 
         file_name = self.path + self.circuit_name + '.ma0'
-
         outputs = []
         for header, value in self.file_reader(file_name):
-
             try:
                 value = float(value)
             except ValueError:
                 raise SimulationFailedError(
-                    f"HSpice could not calculate the response of the {header}. Which is {header}:{value}" 
+                    f"HSpice could not calculate the response of the {header}. Which is {header}:{value}"
                     f"Check error logs for more information.") from None
             else:
                 outputs.append((header, value))
-
         return outputs
-
 
     def read_mt0(self) -> list:
         """ Read power, area, temper"""
 
         file_name = self.path + self.circuit_name + '.mt0'
-
         outputs = []
         for header, value in self.file_reader(file_name):
             try:
                 value = float(value)
             except ValueError:
                 raise SimulationFailedError(
-                    f"HSpice could not calculate the response of the {header}. Which is {header}:{value}" 
+                    f"HSpice could not calculate the response of the {header}. Which is {header}:{value}"
                     f"Check error logs for more information.") from None
             else:
                 outputs.append((header, value))
-       
         return outputs
 
     def read_dp0(self, transistor_count: int) -> dict:
-                
+
         Id = [0.00] * transistor_count
         Ibs = [0.00] * transistor_count
         Ibd = [0.00] * transistor_count
@@ -136,8 +129,5 @@ class HSpiceSimulator:
                     gmb[transN - 1] = float(row_list[rowN + 16][colN])
 
         return {'Id': Id, 'Ibs': Ibs, 'Ibd': Ibd, 'Vgs': Vgs,
-                         'Vds': Vds, 'Vbs': Vbs, 'Vth': Vth, 'Vdsat': Vdsat,
-                         'beta': beta, 'gm': gm, 'gds': gds, 'gmb': gmb}
-
-    def write_geo(self):
-        pass
+                'Vds': Vds, 'Vbs': Vbs, 'Vth': Vth, 'Vdsat': Vdsat,
+                'beta': beta, 'gm': gm, 'gds': gds, 'gmb': gmb}

@@ -5,12 +5,13 @@ from contextlib import suppress, contextmanager
 
 _local = threading.local()
 
+
 @contextmanager
 def acquire(*locks):
     # Sort locks by object identifier
-    locks = sorted(locks, key=lambda x: id(x))   
+    locks = sorted(locks, key=lambda x: id(x))
 
-    acquired = getattr(_local, 'acquired',[])
+    acquired = getattr(_local, 'acquired', [])
     if acquired and max(id(lock) for lock in acquired) >= id(locks[0]):
         raise RuntimeError('Lock Order Violation')
 
@@ -33,15 +34,15 @@ class FileHandler:
     def __init__(self, path: str):
         self.path = path
         self.multithread = 1
-    
+
     def check_required_files(self, multithread):
 
         if multithread is not None:
             if not isinstance(multithread, int):
                 raise TypeError(f"Number of multi thread should be an integer")
             if 0 > multithread or multithread > 8:
-                raise ValueError(f"Number of threads must be in range 1-8 but"\
-                                f"{multithread} was given.")
+                raise ValueError(f"Number of threads must be in range 1-8 but"
+                                 f"{multithread} was given.")
 
         self.multithread = multithread
         source = self.path
@@ -49,11 +50,12 @@ class FileHandler:
         dests = [source_temp + str(i) for i in range(8)]
 
         assert os.path.isdir(source), \
-            f"There is no {source} folder. " \
-            f"Please form the folder first then create the necessary files " \
-            f"in order for simulator to work properly, such as .sp, .geo files. "\
-            f"Your files should be in /{self.path}/<circuitname> folder where "\
-            f"circuitname was assigned in settings file."
+            f"There is direction as {source}. " \
+            f"In order for simulator to work properly " \
+            f"please form the folder first then create the " \
+            f"necessary files such as .sp, .geo files. " \
+            f"Your files should be in /{self.path}/<circuitname> folder where " \
+            f"circuitname was assigned in configs.yaml file."
 
         with suppress(FileExistsError):
             os.makedirs(source_temp)
@@ -63,8 +65,9 @@ class FileHandler:
 
         for dest in dests:
             self._copy_tree(source, dest)
-    
-    def _copy_tree(self, source, destination):
+
+    @staticmethod
+    def _copy_tree(source, destination):
         for item in os.listdir(source):
             s = os.path.join(source, item)
             d = os.path.join(destination, item)
