@@ -8,7 +8,6 @@ _local = threading.local()
 
 @contextmanager
 def acquire(*locks):
-    # Sort locks by object identifier
     locks = sorted(locks, key=lambda x: id(x))
 
     acquired = getattr(_local, 'acquired', [])
@@ -36,11 +35,20 @@ class FileHandler:
         self.multithread = 1
 
     def check_required_files(self, multithread):
+        """
+        The circuit folders will be pasted and copied in order for
+        one thread to lookup only one folder. The folders will
+        be in <circuitname>_temp folder.
+
+        Args:
+            multithread (int): number of threads to be used
+
+        """
 
         if multithread is not None:
             if not isinstance(multithread, int):
                 raise TypeError(f"Number of multi thread should be an integer")
-            if 0 > multithread or multithread > 8:
+            if not 9 > multithread > 0:
                 raise ValueError(f"Number of threads must be in range 1-8 but"
                                  f"{multithread} was given.")
 
@@ -50,7 +58,7 @@ class FileHandler:
         dests = [source_temp + str(i) for i in range(8)]
 
         assert os.path.isdir(source), \
-            f"There is direction as {source}. " \
+            f"There is no direction as {source}. " \
             f"In order for simulator to work properly " \
             f"please form the folder first then create the " \
             f"necessary files such as .sp, .geo files. " \
