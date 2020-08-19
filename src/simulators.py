@@ -17,6 +17,9 @@ class SimulationFailedError(BaseException):
 
 class BaseSimulator(metaclass=ABCMeta):
 
+    def __init__(self, path: str):
+        self.path = path
+
     @abstractmethod
     def simulate(self):
         pass
@@ -25,7 +28,7 @@ class BaseSimulator(metaclass=ABCMeta):
 class HSpiceSimulator(BaseSimulator):
 
     def __init__(self, path: str, circuit_name: str):
-        self.path = path
+        super().__init__(path)
         self.circuit_name = circuit_name
 
     def __repr__(self):
@@ -55,7 +58,6 @@ class HSpiceSimulator(BaseSimulator):
 
     def read_ma0(self) -> list:
         """ Read gain, bw, himg, hreal, tmp from .ma0 file"""
-
         file_name = self.path + self.circuit_name + '.ma0'
         outputs = []
         for header, value in self.file_reader(file_name):
@@ -71,7 +73,6 @@ class HSpiceSimulator(BaseSimulator):
 
     def read_mt0(self) -> list:
         """ Read power, area, temper"""
-
         file_name = self.path + self.circuit_name + '.mt0'
         outputs = []
         for header, value in self.file_reader(file_name):
@@ -86,7 +87,7 @@ class HSpiceSimulator(BaseSimulator):
         return outputs
 
     def read_dp0(self, transistor_count: int) -> dict:
-
+        """ Read values of transistor from .dp0 file."""
         Id = [0.00] * transistor_count
         Ibs = [0.00] * transistor_count
         Ibd = [0.00] * transistor_count
@@ -108,7 +109,6 @@ class HSpiceSimulator(BaseSimulator):
         row_list = [[elem.strip() for elem in row
                      if not elem == '']
                     for row in row_list]
-
         transistor_names = ['M' + str(x + 1) for x in range(transistor_count)]
 
         for rowN, row in enumerate(row_list):
