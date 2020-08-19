@@ -13,7 +13,9 @@ __all__ = [
 
 class Circuit(metaclass=ABCMeta):
     """
-    Abstract Base Class for all type of Circuit.
+
+    Abstract Base Class for any type of Circuit.
+
     """
 
     PROPERTIES = None
@@ -107,7 +109,7 @@ class Circuit(metaclass=ABCMeta):
 
     def run_HSPICE(self, path):
         if type(self).__name__ != "Circuit":
-            raise NotImplemented("You should implement run_HSPICE method"
+            raise NotImplemented("You should override run_HSPICE method"
                                  "in your child class.")
 
 
