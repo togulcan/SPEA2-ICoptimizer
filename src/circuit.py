@@ -12,6 +12,10 @@ __all__ = [
 
 
 class Circuit(metaclass=ABCMeta):
+    """
+    Abstract Base Class for all type of Circuit.
+    """
+
     PROPERTIES = None
 
     def __init__(self,
@@ -77,8 +81,34 @@ class Circuit(metaclass=ABCMeta):
                         f"with {type(obj).__name__} type.")
 
     @abstractmethod
-    def simulate(self, path: str, lock=None):
+    def simulate(self, path, lock=None):
         pass
+
+    def HSPICE_simulate(self, path, lock=None):
+        """
+        Simulate using HSPICE.
+
+        Args:
+            path (str): Path to circuit file
+            lock (threading.Lock): Lock object for
+                avoiding race condition between threads
+                in folders.
+        """
+        try:
+            if lock is not None:
+                with lock:
+                    self.run_HSPICE(path)
+            else:
+                self.run_HSPICE(path)
+        except SimulationFailedError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Unexpected error occured!") from e
+
+    def run_HSPICE(self, path):
+        if type(self).__name__ != "Circuit":
+            raise NotImplemented("You should implement run_HSPICE method"
+                                 "in your child class.")
 
 
 class AnalogCircuit(Circuit):
@@ -89,8 +119,20 @@ class AnalogCircuit(Circuit):
     def __repr__(self):
         return f"AnalogCircuit({list(self.parameters)})"
 
-    def HSPICE_simulate(self, path, lock=None):
+    def simulate(self, path: str, lock=None):
+        self.HSPICE_simulate(path, lock)
 
+    def run_HSPICE(self, path):
+        """
+        Write the parameters of the circuit into a file which
+        the HSpice simulator will be reading. Then call the
+        simulator from os command. Simulator wiwll write the
+        outputs to some files. Read them and assign them to
+        the object.
+
+        Args:
+            path (str): path to folder in which circuit files lay.
+        """
         # create a simulator object
         hspice_simulator = HSpiceSimulator(
             path, self.PROPERTIES["NAME"])
@@ -116,18 +158,6 @@ class AnalogCircuit(Circuit):
         self.t_values = hspice_simulator.read_dp0(
             self.PROPERTIES["TRANSISTOR_NUMBER"])
 
-    def simulate(self, path: str, lock=None):
-        try:
-            if lock is not None:
-                with lock:
-                    self.HSPICE_simulate(path, lock=lock)
-            else:
-                self.HSPICE_simulate(path)
-        except SimulationFailedError:
-            raise
-        except Exception as e:
-            raise RuntimeError(f"Unexpected error occured!") from e
-
 
 class DigitalCircuit(Circuit):
 
@@ -138,19 +168,9 @@ class DigitalCircuit(Circuit):
         return f"DigitalCircuit({list(self.parameters)})"
 
     def simulate(self, path: str, lock=None):
-        try:
-            if lock is not None:
-                with lock:
-                    self.HSPICE_simulate(path, lock=lock)
-            else:
-                self.HSPICE_simulate(path)
-        except SimulationFailedError:
-            raise
-        except Exception as e:
-            raise RuntimeError(f"Unexpected error occured!") from e
+        self.HSPICE_simulate(path, lock)
 
-    def HSPICE_simulate(self, path: str, lock=None):
-
+    def run_HSPICE(self, path):
         # create a simulater object
         hspice_simulator = HSpiceSimulator(
             path, self.PROPERTIES["NAME"])
@@ -182,6 +202,17 @@ class CircuitCreator(metaclass=ABCMeta):
 
     @classmethod
     def create(cls, circuit_type, initializer_type, params=None):
+        """
+        Abstract Factory method for creating a new Circuit instance.
+
+        Args:
+            circuit_type (str): returned circuit type.
+            initializer_type (str): Creator type.
+            params (Union[List[float], numpy.ndarray]): Circuit paramaters.
+
+        Returns:
+            Union[circuit.AnalogCircuit, circuit.DigitalCircuit]
+        """
         if initializer_type == 'Random':
             return RandomInitializer._create(circuit_type)
         elif initializer_type == 'QuasiMonteCarlo':
@@ -196,8 +227,12 @@ class CircuitCreator(metaclass=ABCMeta):
 class RandomInitializer(CircuitCreator):
 
     @classmethod
-    def _create(cls, circuit_type: str, params=None) -> Circuit:
-
+    def _create(cls, circuit_type, params=None):
+        """
+        Create new circuit with parameters that are
+        randomly selected between upper bound and lower
+        bound of the circuit.
+        """
         upper_bound = Circuit.PROPERTIES['UPPER_BOUND']
         lower_bound = Circuit.PROPERTIES['LOWER_BOUND']
         p = len(Circuit.PROPERTIES.get("TOPOLOGY"))
@@ -218,7 +253,6 @@ class RandomInitializer(CircuitCreator):
 class QuasiMonteCarloInitializer(CircuitCreator):
 
     @classmethod
-    @abstractmethod
     def _create(cls, circuit_type, params=None):
         pass
 
@@ -226,8 +260,10 @@ class QuasiMonteCarloInitializer(CircuitCreator):
 class NormalInitializer(CircuitCreator):
 
     @classmethod
-    def _create(cls, circuit_type: str,
-                params: Union[List[float], List[int], np.ndarray] = None) -> Circuit:
+    def _create(cls, circuit_type, params=None):
+        """
+        Create circuit instance with the given parameters.
+        """
         if circuit_type == 'analog':
             return AnalogCircuit(params)
         elif circuit_type == 'digital':
