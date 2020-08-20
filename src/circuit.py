@@ -25,7 +25,7 @@ class Circuit(metaclass=ABCMeta):
         if not isinstance(parameters, (list, np.ndarray)):
             raise TypeError(
                 f"Parameters should be list of float or instance of ndarray.")
-        elif len(parameters) != len(self.PROPERTIES["TOPOLOGY"]):
+        elif len(parameters) != len(self.PROPERTIES["topology"]):
             raise ValueError(
                 f"Length of the parameters and topology are not the same.")
         elif any(map(
@@ -137,11 +137,11 @@ class AnalogCircuit(Circuit):
         """
         # create a simulator object
         hspice_simulator = HSpiceSimulator(
-            path, self.PROPERTIES["NAME"])
+            path, self.PROPERTIES["name"])
 
         # write parameters to param.cir file
         hspice_simulator.write_param(
-            self.PROPERTIES["TOPOLOGY"], self.parameters)
+            self.PROPERTIES["topology"], self.parameters)
 
         # run Hspice to output the results
         hspice_simulator.simulate()
@@ -158,7 +158,7 @@ class AnalogCircuit(Circuit):
         # read Id, Ibs, Ibd, Vgs, Vds, Vbs, Vth,
         # Vdsat, beta, gm, gds, gmb
         self.t_values = hspice_simulator.read_dp0(
-            self.PROPERTIES["TRANSISTOR_NUMBER"])
+            self.PROPERTIES["transistor_number"])
 
 
 class DigitalCircuit(Circuit):
@@ -175,11 +175,11 @@ class DigitalCircuit(Circuit):
     def run_HSPICE(self, path):
         # create a simulater object
         hspice_simulator = HSpiceSimulator(
-            path, self.PROPERTIES["NAME"])
+            path, self.PROPERTIES["name"])
 
         # write parameters to param.cir file
         hspice_simulator.write_param(
-            self.PROPERTIES["TOPOLOGY"], self.parameters)
+            self.PROPERTIES["topology"], self.parameters)
 
         # run Hspice to output the results
         hspice_simulator.simulate()
@@ -192,7 +192,7 @@ class DigitalCircuit(Circuit):
 
         # read Id, Ibs, Ibd, Vgs, Vds, Vbs, Vth,
         # Vdsat, beta, gm, gds, gmb
-        self.t_values = hspice_simulator.read_dp0(self.PROPERTIES["TRANSISTOR_NUMBER"])
+        self.t_values = hspice_simulator.read_dp0(self.PROPERTIES["transistor_number"])
 
 
 class CircuitCreator(metaclass=ABCMeta):
@@ -235,9 +235,9 @@ class RandomInitializer(CircuitCreator):
         randomly selected between upper bound and lower
         bound of the circuit.
         """
-        upper_bound = Circuit.PROPERTIES['UPPER_BOUND']
-        lower_bound = Circuit.PROPERTIES['LOWER_BOUND']
-        p = len(Circuit.PROPERTIES.get("TOPOLOGY"))
+        upper_bound = Circuit.PROPERTIES['upper_bound']
+        lower_bound = Circuit.PROPERTIES['lower_bound']
+        p = len(Circuit.PROPERTIES.get("topology"))
 
         dif_bound = (np.array(upper_bound) - np.array(lower_bound))
         variable = np.multiply(
