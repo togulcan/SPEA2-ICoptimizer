@@ -40,10 +40,10 @@ Circuit:
 
 SPEA2:
   maximum_generation: 300
-  N: 300 #number of individual per generation
+  N: 50 #number of individual per generation
   targets:
-    - gain: max #this parameter will be maximized
-    - bw: max #this parameter will be maximized
+    gain: max #this parameter will be maximized
+    bw: max #this parameter will be maximized
   constraints:
     pm:
       min: 45
