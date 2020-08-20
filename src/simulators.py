@@ -35,7 +35,8 @@ class HSpiceSimulator(BaseSimulator):
         return f"HSpiceSimulator({self.path})"
 
     def simulate(self):
-        execution_command = r'start/min/wait /D ' + self.path + \
+        path = self.path.replace('/', '\\')
+        execution_command = r'start/min/wait /D ' + path + \
                             r' C:\synopsys\Hspice_A-2008.03\BIN\hspicerf.exe ' \
                             + self.circuit_name + '.sp -o ' + self.circuit_name
         os.system(execution_command)
