@@ -54,7 +54,7 @@ class FileHandler:
 
         self.multithread = multithread
         source = self.path
-        source_temp = source[:-1] + '_temp\\'
+        source_temp = source[:-1] + '_temp/'
         dests = [source_temp + str(i) for i in range(8)]
 
         assert os.path.isdir(source), \
