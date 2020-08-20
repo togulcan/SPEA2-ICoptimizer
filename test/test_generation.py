@@ -1,7 +1,9 @@
 import pytest
 
-from docs.spea2.generation import Generation
-from docs.src.filehandler import FileHandler
+from src.spea2 import Generation
+from src.filehandler import FileHandler
+
+
 def test_simulate():
     path = "C:\\Users\\ogulc\\Desktop\\MOO3\\circuitfiles\\comparator\\"
     gen = Generation(600, 0)
