@@ -1,3 +1,77 @@
+from .circuit import *
 from .filehandler import FileHandler
-from .circuit import Circuit, AnalogCircuit, DigitalCircuit, CircuitCreator
-from .simulators import SimulationFailedError, HSpiceSimulator
+from .simulators import HSpiceSimulator, SimulationFailedError
+from .spea2 import (
+    Generation, FitnessAssigner, EvolutionaryAlgorithm, Individual
+)
+
+
+def process(circuit_config, spea2_config, path,
+            thread=1, saving_format='pickle', only_cct=False):
+
+    circuit.Circuit.PROPERTIES = circuit_config
+    Generation.PROPERTIES = circuit_config
+    Individual.TARGETS = spea2_config["targets"]
+    Individual.CONSTRAINTS = spea2_config["constraints"]
+    Individual.constraint_operations = [x for x in Individual.CONSTRAINTS.keys()]
+    THREAD = thread
+
+    N = spea2_config["N"]
+    MAXIMUM_GEN = spea2_config["maximum_generation"]
+
+    kii = 0
+    # Create first generation with N individual
+    generation = Generation(N, kii)
+
+    # Each generation will be appended to the generationpool after
+    # each iteration. Since each generation contains individuals,
+    # each individual contains many float values, generationpool
+    # instance contains thousand and even millions float values,
+    # hence memory footprint is a highly critical concern. So keeping
+    # data as numpy arrays in memory would be the best choice for
+    # high number of generation and individuals. Otherwise,
+    # set saving_format='instance'
+    # generation_pool = GenerationPool(saving_format='numpy')
+    # generation_pool.append(generation)
+
+    # Initialize the first generation. Either with Randomly,
+    # or using Low-discrepancy sequence.
+    generation.population_initialize('Random')
+
+    # Simulate the individuals of the generation
+    generation.simulate(path=path, multithread=THREAD)
+
+    # Assign fitness instance to the each individual in the generation
+    FitnessAssigner.assign_fitness_first(generation)
+
+    # Since it is the first generation, archive individuals and individiuals
+    # will be the same.
+    generation.archive_inds = generation.individuals
+
+    # With the help of the assigned fitness values, the algorithm
+    # can now produce the next generation.
+    next_generation = EvolutionaryAlgorithm(generation, generation).produce()
+
+    while kii < MAXIMUM_GEN - 1:
+        # Increase the current generation number
+        kii += 1
+        print("# Gen: ", kii)
+
+        # Now simulate the new generation in order to calculate
+        # performance values of the each circuit generation has.
+        next_generation.simulate(path=path, multithread=THREAD)
+
+        # Assign fitness instance to the new generation and arch_fitness
+        # instance to the generation before.
+        FitnessAssigner().assign_fitness(next_generation, generation)
+
+        # Choose archive individuals based on the assigned fitness values
+        algorithm = EvolutionaryAlgorithm(generation, next_generation)
+        next_generation.archive_inds = algorithm.select_archive()
+
+        # Iterate to the next generation.
+        new_generation = algorithm.produce()
+
+        # Create a shallow copy of new generation and overrides generation
+        generation = next_generation
+        next_generation = new_generation
