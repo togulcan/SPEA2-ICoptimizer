@@ -1,4 +1,3 @@
-from typing import List
 from heapq import nsmallest
 
 from .helperfuncs import (
@@ -12,9 +11,7 @@ class FitnessAssigner:
 
     @classmethod
     def assign_fitness_first(cls, gen):
-
         normalize_constants = get_normalize_constants(gen.individuals)
-
         for ind1 in gen.individuals:
             for j, ind2 in enumerate(gen.individuals):
 
@@ -37,43 +34,50 @@ class FitnessAssigner:
             ind.fitness.fitness = calculate_fitness_value(
                 ind.fitness, max_rawfitnesses, gen.kii)
 
-
-    def assign_fitness(self, gen, before_generation):
+    def assign_fitness(self, next_gen, gen):
         """
         Assign fitness values to the generation and archive
         generation whose kii>1.
         """
         self._assign_total_error(
-            gen.individuals, before_generation.archive_inds)
+            next_gen.individuals, gen.archive_inds
+        )
 
         self._assign_strength(
-            gen.individuals, before_generation.archive_inds)
+            next_gen.individuals, gen.archive_inds
+        )
 
         self._assign_rawfitness(
-            gen.individuals, before_generation.archive_inds)
+            next_gen.individuals, gen.archive_inds
+        )
 
         distance_normalize = get_normalize_constants(
-            gen.individuals, before_generation.archive_inds)
+            next_gen.individuals, gen.archive_inds
+        )
 
         distance_normalize_archive = get_normalize_constants(
-            before_generation.archive_inds)
+            gen.archive_inds
+        )
 
         self._assign_distance(
-            gen.individuals, before_generation.archive_inds,
-            distance_normalize, distance_normalize_archive)
+            next_gen.individuals, gen.archive_inds,
+            distance_normalize, distance_normalize_archive
+        )
 
-        self._assign_fitness(gen.individuals,
-                             before_generation.archive_inds, gen.kii)
+        self._assign_fitness(
+            next_gen.individuals,
+            gen.archive_inds, next_gen.kii
+        )
 
-    def _assign_total_error(self, inds, arch_inds):
-
+    @staticmethod
+    def _assign_total_error(inds, arch_inds):
         for ind, arch_ind in zip(inds, arch_inds):
             ind.fitness.total_error = calculate_total_error(ind)
             arch_ind.arch_fitness.total_error = calculate_total_error(arch_ind)
 
-    def _assign_strength(self, inds, arch_inds):
+    @staticmethod
+    def _assign_strength(inds, arch_inds):
         """ Assign strength values to new generation """
-
         for ind1, arch_ind1 in zip(inds, arch_inds):
             for ind2, arch_ind2 in zip(inds, arch_inds):
 
@@ -85,9 +89,9 @@ class FitnessAssigner:
                         or compare_targets(arch_ind1, arch_ind2):
                     arch_ind1.arch_fitness.strength += 1
 
-    def _assign_rawfitness(self, inds, arch_inds):
+    @staticmethod
+    def _assign_rawfitness(inds, arch_inds):
         """ Assign rawfitness values to new generation """
-
         for ind1, arch_ind1 in zip(inds, arch_inds):
             for ind2, arch_ind2 in zip(inds, arch_inds):
 
@@ -103,23 +107,20 @@ class FitnessAssigner:
                 if compare_targets(arch_ind2, arch_ind1):
                     arch_ind1.arch_fitness.rawfitness += arch_ind2.arch_fitness.strength
 
-    def _assign_distance(self, inds, arch_inds, normalize, normalize_arc):
+    @staticmethod
+    def _assign_distance(inds, arch_inds, normalize, normalize_arc):
         """ Assign distance values to new generation """
-
         for ind1, arch_ind1 in zip(inds, arch_inds):
-
-            d1 = ind1.fitness_values.distance
+            d1 = ind1.fitness.distance
             d2 = arch_ind1.arch_fitness.distance
-
             for j, arch_ind2 in enumerate(arch_inds):
                 d1[j] = calculate_distance(ind1, arch_ind2, normalize)
                 d2[j] = calculate_distance(arch_ind1, arch_ind2, normalize_arc)
+            ind1.fitness.distance = min(d1)
+            arch_ind1.arch_fitness.distance = nsmallest(2, d2)[-1]
 
-            d1 = min(d1)
-            d2 = nsmallest(2, d2)[-1]
-
-    def _assign_fitness(self, inds, arch_inds, kii):
-
+    @staticmethod
+    def _assign_fitness(inds, arch_inds, kii):
         normalize_rawfitness = max([ind.fitness.rawfitness for ind in inds])
         normalize_rawfitness_arch = max(
             [ind.fitness.rawfitness for ind in arch_inds])

@@ -1,14 +1,12 @@
 from math import ceil
 import numpy as np
 from random import randrange, uniform
-from typing import Type
-
 
 from .generation import Generation
 from .individual import Individual
 
 
-def _single_mating(gen: Type["Generation"]) -> Individual:
+def _single_mating(gen):
     """ Choose a parent from archive randomly """
     p1 = ceil(randrange(gen.N))
     p2 = ceil(randrange(gen.N))
@@ -24,13 +22,16 @@ def _single_mating(gen: Type["Generation"]) -> Individual:
             fitness1 = parent1.fitness.fitness
         elif parent1.coming_from == 'last_arch':
             fitness1 = parent1.arch_fitness.fitness
-        
+        else:
+            raise ValueError(f"Can not recognized ind.coming_from")
+
         if parent2.coming_from == 'last_gen':
             fitness2 = parent2.fitness.fitness
         elif parent2.coming_from == 'last_arch':
             fitness2 = parent2.arch_fitness.fitness
+        else:
+            raise ValueError(f"Can not recognized ind.coming_from")
 
-        raise ValueError(f"Can not recognized ind.coming_from")
     else:
         fitness1 = parent1.fitness.fitness
         fitness2 = parent2.fitness.fitness
@@ -41,45 +42,48 @@ def _single_mating(gen: Type["Generation"]) -> Individual:
         return parent1
 
 
-def _single_mutation(ind: Individual,
-                    upper_bound, lower_bound) -> Individual:
-
+def _single_mutation(ind, upper_bound, lower_bound):
     mutation_step_size = 0.1 + 0.2 * uniform(0, 1)
     mutation = True if uniform(0, 1) > mutation_step_size else False
-    
+
     if mutation:
         param_index_to_be_mutated = randrange(0, len(ind.circuit.parameters))
         difference_bound = np.subtract(upper_bound[param_index_to_be_mutated],
-                                    lower_bound[param_index_to_be_mutated])
+                                       lower_bound[param_index_to_be_mutated])
         multiplied_difference_bound = np.multiply(difference_bound, uniform(0, 1))
-        
-        ind.circuit.parameters[param_index_to_be_mutated] = np.add(
-            lower_bound[param_index_to_be_mutated], multiplied_difference_bound)
+
+        parameters = list(ind.circuit.parameters)
+        parameters[param_index_to_be_mutated] = \
+            np.add(lower_bound[param_index_to_be_mutated], multiplied_difference_bound)
+
+        ind.circuit = type(ind.circuit).__call__(parameters)
+
     return ind
 
 
 class EvolutionaryAlgorithm:
     """ SPEA2 evolutionary algorithm class. """
 
-    def __init__(self, generation: Generation, 
-                    next_generation: Generation = None):
+    def __init__(self, generation: Generation,
+                 next_generation: Generation = None):
         self.gen = generation
         self.next_gen = next_generation
         self.N = generation.N
-    
-    def mating_pool(self) -> Individual:
+
+    def mating_pool(self):
         """
         Randomly selects two parent from archive and yield 
         the one which has lower fitness value i.e. well performance.
         """
-        seen = set()
+        # seen = set()
         while True:
             selected_parent = _single_mating(self.next_gen)
-            if id(selected_parent) not in seen:
-                seen.add(id(selected_parent))
-                yield selected_parent
-            if len(seen) == len(self.next_gen.archive_inds):
-                seen = set()
+            yield selected_parent
+            # if id(selected_parent) not in seen:
+            #     seen.add(id(selected_parent))
+            #     yield selected_parent
+            # if len(seen) == len(self.next_gen.archive_inds):
+            #     seen = set()
 
     def cross_mutation_pool(self):
         """ Apply mutation to randomly selected children"""
@@ -87,28 +91,29 @@ class EvolutionaryAlgorithm:
         recombination_coefficient = 0.8
 
         while True:
-            parent1, parent2 = (yield)
+            parent1, parent2 = yield
 
-            circuit1 = parent1.circuit * recombination_coefficient +\
-                            parent2 * (1 - recombination_coefficient)
+            circuit1 = parent1.circuit * recombination_coefficient + \
+                       parent2.circuit * (1 - recombination_coefficient)
             child1 = Individual(circuit1, self.N)
 
-            circuit2 = parent2.circuit * recombination_coefficient +\
-                            parent1 * (1 - recombination_coefficient)
+            circuit2 = parent2.circuit * recombination_coefficient + \
+                       parent1.circuit * (1 - recombination_coefficient)
             child2 = Individual(circuit2, self.N)
-            
-            mutated_child1 = _single_mutation(child1, 
-                    circuit1.PROPERTIES['upper_bound'], circuit1.PROPERTIES['lower_bound'])
-            mutated_child2 = _single_mutation(child2, 
-                    circuit2.PROPERTIES['upper_bound'], circuit2.PROPERTIES['lower_bound'])
 
+            mutated_child1 = _single_mutation(child1,
+                                              circuit1.PROPERTIES['upper_bound'],
+                                              circuit1.PROPERTIES['lower_bound'])
+            mutated_child2 = _single_mutation(child2,
+                                              circuit2.PROPERTIES['upper_bound'],
+                                              circuit2.PROPERTIES['lower_bound'])
             yield mutated_child1, mutated_child2
 
     def select_archive(self):
-        
+
         archive_inds_temp = set()
         for ind, arch_ind in zip(self.next_gen.individuals, self.gen.archive_inds):
-           
+
             if ind.fitness.fitness == 0 and ind.fitness.total_error == 0:
                 if ind not in archive_inds_temp:
                     archive_inds_temp.add(ind)
@@ -144,9 +149,9 @@ class EvolutionaryAlgorithm:
             while len(archive_inds_temp) > self.gen.N:
                 archive_inds_temp.pop()
 
-        return archive_inds_temp
+        return list(archive_inds_temp)
 
-    def produce_new_individual(self) -> Individual:
+    def produce_new_individual(self):
         pool = self.mating_pool()
         cross_mut = self.cross_mutation_pool()
         next(cross_mut)
@@ -157,18 +162,21 @@ class EvolutionaryAlgorithm:
             except StopIteration:
                 cross_mut.close()
                 raise RuntimeError(f"There is no individual in archive to be yielded."
-                                    f"All of them have been yielded before.")
+                                   f"All of them have been yielded before.")
             else:
-                child1, child2 = cross_mut.send(parent1, parent2)
+                child1, child2 = cross_mut.send((parent1, parent2))
                 yield child1, child2
+                next(cross_mut)
 
-    def produce(self) -> Generation:
-        new_generation = Generation(self.N, self.next_gen.kii+1)
+    def produce(self):
+        new_generation = Generation(self.N, self.next_gen.kii + 1)
         new_ind_it = self.produce_new_individual()
-        
-        for _ in range(self.N):
-            ind = next(new_ind_it)
-            new_generation.individuals.append(ind)
-        
-        return new_generation
 
+        while len(new_generation.individuals) < self.N:
+            ind1, ind2 = next(new_ind_it)
+            new_generation.individuals.append(ind1)
+            new_generation.individuals.append(ind2)
+        if len(new_generation.individuals) > self.N:
+            del new_generation.individuals[-1]
+
+        return new_generation
