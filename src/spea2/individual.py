@@ -1,16 +1,12 @@
-from decimal import Decimal
 from .fitness import Fitness
-from config import configs
 
 
 class Individual:
-
-    _TARGETS = configs["SPEA2"]["TARGETS"]
-    _CONSTRAINTS = configs["SPEA2"]["CONSTRAINTS"]
-    constraint_operations = [x for x in _CONSTRAINTS.keys()]
+    TARGETS = None
+    CONSTRAINTS = None
+    constraint_operations = None
 
     def __init__(self, circuit, N):
-
         self.circuit = circuit
         self.fitness = Fitness(N)
         self.arch_fitness = Fitness(N)
@@ -25,7 +21,7 @@ class Individual:
     @property
     def targets(self):
         t = []
-        for target_name, operation in self._TARGETS.items():
+        for target_name, operation in self.TARGETS.items():
             if operation == 'max':
                 t.append(getattr(self.circuit, target_name))
             elif operation == 'min':
@@ -38,4 +34,4 @@ class Individual:
     @property
     def constraint_values(self):
         return [getattr(self.circuit, cons_name) 
-                for cons_name in self._CONSTRAINTS.keys()]
+                for cons_name in self.CONSTRAINTS.keys()]
