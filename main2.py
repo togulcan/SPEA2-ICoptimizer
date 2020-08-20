@@ -15,7 +15,7 @@ parser.add_argument("--only_cct", help="optional argument for saving the fitness
 args = parser.parse_args()
 cfg_path = args.config_path
 saving_mode = args.saving_mode
-multi_thread = int(args.multithread) if args.multithread is not None else 1
+multi_thread = int(args.thread) if args.thread is not None else 1
 only_cct = True if args.only_cct else False
 
 # Set logger configurations.
@@ -28,7 +28,7 @@ if saving_mode not in ("numpy", "pickle"):
     raise RuntimeError(f"Please note that saving_mode argument "
                        f"should be either 'numpy' or 'pickle'")
 
-if not 0 < multi_thread < 8:
+if not 0 < multi_thread < 9:
     raise RuntimeError(f"Number of threads should be in between (1,8) "
                        f"but given {multi_thread}.")
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # start the process
     process(
-        CIRCUIT_PROPERTIES, SPEA2_PROPERTIES,
+        CIRCUIT_PROPERTIES, SPEA2_PROPERTIES, path,
         multi_thread, saving_mode, only_cct
     )
 
