@@ -1,6 +1,7 @@
 import copy
 import pickle
 import itertools as it
+import numpy as np
 from typing import List
 from threading import Lock
 from datetime import datetime
@@ -99,36 +100,28 @@ class Generation:
 
 class GenerationPool:
 
-    def __init__(self, saving_format='instance', only_cct=False):
+    def __init__(self, saving_format='instance',
+                 only_cct=False, circuit_config=None,
+                 spea2_config=None):
         self.saving_format = saving_format
         self.only_cct = only_cct
         self.pool = []
         self.saved_file_path = None
+        self.circuit_config = circuit_config
+        if saving_format == 'numpy':
+            self.parameters = np.zeros((
+                spea2_config["N"],
+                len(spea2_config["topology"]),
+                spea2_config["maximum_generation"]
+            ), dtype=float)
+            for k in circuit_config:
+                setattr(self, k, np.zeros((spea2_config["N"],
+                                           spea2_config["maximum_generation"]),
+                                          dtype=float))
 
     def append(self, generation):
-        generation_ = copy.deepcopy(generation)
         if self.saving_format == 'instance':
-            if self.only_cct:
-                for ind, arc_ind in zip(generation_.individuals,
-                                        generation_.archive_inds):
-                    ind_keys = list(ind.__dict__.keys())
-                    arc_ind_keys = list(arc_ind.__dict__.keys())
-                    for key in ind_keys:
-                        if key != "circuit" and hasattr(ind, key):
-                            delattr(ind, key)
-                    for key in arc_ind_keys:
-                        if key != "circuit" and hasattr(arc_ind, key):
-                            delattr(arc_ind, key)
-
-                    # if hasattr(ind, "fitness"):
-                    #     del ind.fitness
-                    # if hasattr(ind, "arch_fitness"):
-                    #     del ind.arch_fitness
-                    # if hasattr(arc_ind, "fitness"):
-                    #     del arc_ind.fitness
-                    # if hasattr(arc_ind, "arch_fitness"):
-                    #     del arc_ind.arch_fitness
-            self.pool.append(generation_)
+            self._append_as_instance(generation)
         elif self.saving_format == 'numpy':
             pass
         else:
@@ -136,11 +129,11 @@ class GenerationPool:
 
     def save(self, saving_path, cct_name, kii):
         if self.saving_format == 'instance':
-            self.save_as_instance(saving_path, cct_name, kii)
+            self._save_as_instance(saving_path, cct_name, kii)
         elif self.saving_format == 'numpy':
-            self.save_as_numpy(saving_path, cct_name, kii)
+            self._save_as_numpy(saving_path, cct_name, kii)
 
-    def save_as_instance(self, path, cct_name, kii):
+    def _save_as_instance(self, path, cct_name, kii):
         today = datetime.now()
         file_name = today.strftime(cct_name + " d-%Y.%m.%d h-%H.%M ")
         file_name += 'gen-0to' + str(kii)
@@ -148,5 +141,23 @@ class GenerationPool:
             pickle.dump(self.pool, f)
         self.saved_file_path = path + file_name
 
-    def save_as_numpy(self, path, cct_name, kii):
+    def _save_as_numpy(self, path, cct_name, kii):
+        pass
+
+    def _append_as_instance(self, generation):
+        generation_ = copy.deepcopy(generation)
+        if self.only_cct:
+            for ind, arc_ind in zip(generation_.individuals,
+                                    generation_.archive_inds):
+                ind_keys = list(ind.__dict__.keys())
+                arc_ind_keys = list(arc_ind.__dict__.keys())
+                for key in ind_keys:
+                    if key != "circuit" and hasattr(ind, key):
+                        delattr(ind, key)
+                for key in arc_ind_keys:
+                    if key != "circuit" and hasattr(arc_ind, key):
+                        delattr(arc_ind, key)
+        self.pool.append(generation_)
+
+    def _append_as_nparray(self, generation):
         pass
