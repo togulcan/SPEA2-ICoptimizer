@@ -7,10 +7,11 @@ import argparse
 from src import FileHandler, process
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--only_cct", help="optional argument for saving the fitness data.",
+                    action='store_true')
 parser.add_argument("--config_path", help="path to configuration .yaml file")
-parser.add_argument("--saving_mode", help="this should be either 'numpy' or 'pickle'")
+parser.add_argument("--saving_mode", help="this should be either 'numpy' or 'instance'")
 parser.add_argument("--thread", help="number of thread to be used'")
-parser.add_argument("--only_cct", help="optional argument for saving the fitness data.")
 
 args = parser.parse_args()
 cfg_path = args.config_path
@@ -21,12 +22,13 @@ only_cct = True if args.only_cct else False
 # Set logger configurations.
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 logging.basicConfig(filename='logs.log',
-                    format=LOG_FORMAT)
+                    format=LOG_FORMAT,
+                    level=logging.INFO)
 logger = logging.getLogger()
 
-if saving_mode not in ("numpy", "pickle"):
+if saving_mode not in ("numpy", "instance"):
     raise RuntimeError(f"Please note that saving_mode argument "
-                       f"should be either 'numpy' or 'pickle'")
+                       f"should be either 'numpy' or 'instance'")
 
 if not 0 < multi_thread < 9:
     raise RuntimeError(f"Number of threads should be in between (1,8) "
@@ -42,16 +44,16 @@ if not os.path.isdir(CIRCUIT_PROPERTIES["path_to_output"]):
                      f"{CIRCUIT_PROPERTIES['path_to_output']}")
 
 if __name__ == "__main__":
-    # Create temp file to perform simulations
+    # Create temp folder to perform simulations
     file_handler = FileHandler(CIRCUIT_PROPERTIES['path_to_circuit'])
-    file_handler.check_required_files(multi_thread)
-    path = file_handler.get_simulation_folder()
+    file_handler.form_simulation_environment(multi_thread)
+    path = file_handler.get_folder_path()
 
     # start time_perf counter.
     start = time.perf_counter()
 
     # start the process
-    process(
+    saved_file_path = process(
         CIRCUIT_PROPERTIES, SPEA2_PROPERTIES, path,
         multi_thread, saving_mode, only_cct
     )
@@ -64,4 +66,7 @@ if __name__ == "__main__":
                 f"with {SPEA2_PROPERTIES['N']} individuals for each generation."
                 f"\nNumber of threads used: {multi_thread}"
                 f"\nSaving Format: {saving_mode}"
-                f"\nSaved to {CIRCUIT_PROPERTIES['path_to_output']} file.")
+                f"\nSaved to {saved_file_path} file.\n")
+
+    # Delete the temp folder
+    file_handler.delete_simulation_environment()
