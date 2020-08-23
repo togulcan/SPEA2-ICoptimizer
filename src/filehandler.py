@@ -1,6 +1,6 @@
 import os
 import threading
-from shutil import copytree, copy2
+from shutil import copytree, copy2, rmtree
 from contextlib import suppress, contextmanager
 
 _local = threading.local()
@@ -34,7 +34,7 @@ class FileHandler:
         self.path = path
         self.multithread = 1
 
-    def check_required_files(self, multithread):
+    def form_simulation_environment(self, multithread):
         """
         The circuit folders will be pasted and copied in order for
         one thread to lookup only one folder. The folders will
@@ -85,7 +85,19 @@ class FileHandler:
                 if not os.path.exists(d) or os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
                     copy2(s, d)
 
-    def get_simulation_folder(self):
+    def delete_simulation_environment(self):
+        """ The folders where simulations executed will be deleted. """
+        path = self.get_folder_path()
+        try:
+            rmtree(path)
+        except OSError as e:
+            print("Error ", path, ":", e.strerror)
+
+    def get_folder_path(self):
+        """
+        Returns:
+            path to the temporary simulation folder.
+        """
         if self.multithread > 1:
             return self.path[:-1] + '_temp\\'
         return self.path
