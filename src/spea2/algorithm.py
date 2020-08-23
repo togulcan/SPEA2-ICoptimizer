@@ -1,6 +1,5 @@
-from math import ceil
 import numpy as np
-from random import randrange, uniform
+from random import randrange, uniform, choices
 
 from .generation import Generation
 from .individual import Individual
@@ -8,14 +7,8 @@ from .individual import Individual
 
 def _single_mating(gen):
     """ Choose a parent from archive randomly """
-    p1 = ceil(randrange(gen.N))
-    p2 = ceil(randrange(gen.N))
 
-    while p1 == p2:
-        p2 = ceil(randrange(gen.N))
-
-    parent1 = gen.archive_inds[p1]
-    parent2 = gen.archive_inds[p2]
+    parent1, parent2 = choices(gen.archive_inds, k=2)
 
     if hasattr(parent1, 'coming_from') and hasattr(parent2, 'coming_from'):
         if parent1.coming_from == 'last_gen':
@@ -31,7 +24,6 @@ def _single_mating(gen):
             fitness2 = parent2.arch_fitness.fitness
         else:
             raise ValueError(f"Can not recognized ind.coming_from")
-
     else:
         fitness1 = parent1.fitness.fitness
         fitness2 = parent2.fitness.fitness
@@ -57,7 +49,6 @@ def _single_mutation(ind, upper_bound, lower_bound):
             np.add(lower_bound[param_index_to_be_mutated], multiplied_difference_bound)
 
         ind.circuit = type(ind.circuit).__call__(parameters)
-
     return ind
 
 
@@ -87,9 +78,7 @@ class EvolutionaryAlgorithm:
 
     def cross_mutation_pool(self):
         """ Apply mutation to randomly selected children"""
-
         recombination_coefficient = 0.8
-
         while True:
             parent1, parent2 = yield
 
@@ -110,10 +99,8 @@ class EvolutionaryAlgorithm:
             yield mutated_child1, mutated_child2
 
     def select_archive(self):
-
         archive_inds_temp = set()
         for ind, arch_ind in zip(self.next_gen.individuals, self.gen.archive_inds):
-
             if ind.fitness.fitness == 0 and ind.fitness.total_error == 0:
                 if ind not in archive_inds_temp:
                     archive_inds_temp.add(ind)
@@ -144,7 +131,6 @@ class EvolutionaryAlgorithm:
                         archive_inds_temp.add(ind_to_append)
                         ind_to_append.coming_from = 'last_arch'
                 i += 1
-
         elif len(archive_inds_temp) > self.gen.N:
             while len(archive_inds_temp) > self.gen.N:
                 archive_inds_temp.pop()
