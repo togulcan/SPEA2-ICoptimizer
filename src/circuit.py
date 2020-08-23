@@ -50,7 +50,7 @@ class Circuit(metaclass=ABCMeta):
         return hash(tuple(self.parameters))
 
     def __eq__(self, other):
-        return self.parameters == other.parameters
+        return tuple(self.parameters) == tuple(other.parameters)
 
     def __add__(self, obj):
         """Operator overloading for adding two Circuit."""
