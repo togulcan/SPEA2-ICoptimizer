@@ -19,7 +19,7 @@ def process(circuit_config, spea2_config, path,
     MAXIMUM_GEN = spea2_config["maximum_generation"]
     output_path = circuit_config["path_to_output"]
     kii = 0
-
+    
     # Create first generation with N individual
     generation = Generation(N, kii)
 
@@ -31,7 +31,8 @@ def process(circuit_config, spea2_config, path,
     # data as numpy arrays in memory would be the best choice for
     # high number of generation and individuals. Otherwise,
     # set saving_format='instance'
-    generation_pool = GenerationPool(saving_format, only_cct)
+    generation_pool = GenerationPool(saving_format, only_cct,
+                                     circuit_config, spea2_config)
 
     # Initialize the first generation. Either with Randomly,
     # or using Low-discrepancy sequence.
@@ -59,9 +60,6 @@ def process(circuit_config, spea2_config, path,
         kii += 1
         print("# Gen: ", kii)
 
-        # Append the last generation
-        generation_pool.append(next_generation)
-
         # Now simulate the new generation in order to calculate
         # performance values of the each circuit generation has.
         next_generation.simulate(path=path, multithread=THREAD)
@@ -80,6 +78,9 @@ def process(circuit_config, spea2_config, path,
         # Create a shallow copy of new generation and overrides generation
         generation = next_generation
         next_generation = new_generation
+
+        # Append the last generation
+        generation_pool.append(generation)
 
     # Save pool to the path_to_output
     generation_pool.save(output_path, circuit_config["name"], kii)
