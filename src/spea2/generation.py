@@ -1,6 +1,9 @@
+import copy
+import pickle
 import itertools as it
 from typing import List
 from threading import Lock
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from .. import CircuitCreator, SimulationFailedError
@@ -96,8 +99,54 @@ class Generation:
 
 class GenerationPool:
 
-    def __init__(self, save_format=None):
-        self.save_format = save_format
+    def __init__(self, saving_format='instance', only_cct=False):
+        self.saving_format = saving_format
+        self.only_cct = only_cct
+        self.pool = []
+        self.saved_file_path = None
 
     def append(self, generation):
+        generation_ = copy.deepcopy(generation)
+        if self.saving_format == 'instance':
+            if self.only_cct:
+                for ind, arc_ind in zip(generation_.individuals,
+                                        generation_.archive_inds):
+                    ind_keys = list(ind.__dict__.keys())
+                    arc_ind_keys = list(arc_ind.__dict__.keys())
+                    for key in ind_keys:
+                        if key != "circuit" and hasattr(ind, key):
+                            delattr(ind, key)
+                    for key in arc_ind_keys:
+                        if key != "circuit" and hasattr(arc_ind, key):
+                            delattr(arc_ind, key)
+
+                    # if hasattr(ind, "fitness"):
+                    #     del ind.fitness
+                    # if hasattr(ind, "arch_fitness"):
+                    #     del ind.arch_fitness
+                    # if hasattr(arc_ind, "fitness"):
+                    #     del arc_ind.fitness
+                    # if hasattr(arc_ind, "arch_fitness"):
+                    #     del arc_ind.arch_fitness
+            self.pool.append(generation_)
+        elif self.saving_format == 'numpy':
+            pass
+        else:
+            raise ValueError(f"Could not recognized {self.saving_format}")
+
+    def save(self, saving_path, cct_name, kii):
+        if self.saving_format == 'instance':
+            self.save_as_instance(saving_path, cct_name, kii)
+        elif self.saving_format == 'numpy':
+            self.save_as_numpy(saving_path, cct_name, kii)
+
+    def save_as_instance(self, path, cct_name, kii):
+        today = datetime.now()
+        file_name = today.strftime(cct_name + " d-%Y.%m.%d h-%H.%M ")
+        file_name += 'gen-0to' + str(kii)
+        with open(path + file_name, 'wb') as f:
+            pickle.dump(self.pool, f)
+        self.saved_file_path = path + file_name
+
+    def save_as_numpy(self, path, cct_name, kii):
         pass
