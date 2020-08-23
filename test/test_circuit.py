@@ -5,7 +5,7 @@ from src.circuit import (
     Circuit, AnalogCircuit, DigitalCircuit
 )
 
-# Test for this properties
+# Test for these properties
 Circuit.PROPERTIES = {
     "NAME": "comparator",
     "TYPE": "analog",
