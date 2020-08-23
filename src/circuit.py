@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from abc import ABCMeta, abstractmethod
 from typing import Union, List
@@ -121,6 +122,17 @@ class AnalogCircuit(Circuit):
     def __repr__(self):
         return f"AnalogCircuit({list(self.parameters)})"
 
+    @property
+    def pm(self):
+        if hasattr(self, "himg") and hasattr(self, "hreal"):
+            if (self.himg > 0 and self.hreal > 0) or (self.himg < 0 and self.hreal < 0):
+                return np.arctan(self.himg / self.hreal) * 180 / math.pi
+            elif self.himg > 0 and self.hreal < 0:
+                return 0.1
+            else:
+                return 10
+        return None
+
     def simulate(self, path: str, lock=None):
         self.HSPICE_simulate(path, lock)
 
@@ -157,8 +169,8 @@ class AnalogCircuit(Circuit):
 
         # read Id, Ibs, Ibd, Vgs, Vds, Vbs, Vth,
         # Vdsat, beta, gm, gds, gmb
-        self.t_values = hspice_simulator.read_dp0(
-            self.PROPERTIES["transistor_number"])
+        # self.t_values = hspice_simulator.read_dp0(
+        #     self.PROPERTIES["transistor_number"])
 
 
 class DigitalCircuit(Circuit):
