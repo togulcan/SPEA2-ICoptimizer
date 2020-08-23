@@ -111,8 +111,8 @@ class FitnessAssigner:
     def _assign_distance(inds, arch_inds, normalize, normalize_arc):
         """ Assign distance values to new generation """
         for ind1, arch_ind1 in zip(inds, arch_inds):
-            d1 = ind1.fitness.distance
-            d2 = arch_ind1.arch_fitness.distance
+            d1 = [0.0] * len(inds)
+            d2 = [0.0] * len(inds)
             for j, arch_ind2 in enumerate(arch_inds):
                 d1[j] = calculate_distance(ind1, arch_ind2, normalize)
                 d2[j] = calculate_distance(arch_ind1, arch_ind2, normalize_arc)
