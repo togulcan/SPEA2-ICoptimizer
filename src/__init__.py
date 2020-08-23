@@ -2,24 +2,24 @@ from .circuit import *
 from .filehandler import FileHandler
 from .simulators import HSpiceSimulator, SimulationFailedError
 from .spea2 import (
-    Generation, FitnessAssigner, EvolutionaryAlgorithm, Individual
+    Generation, GenerationPool, FitnessAssigner,
+    EvolutionaryAlgorithm, Individual
 )
 
 
 def process(circuit_config, spea2_config, path,
-            thread=1, saving_format='pickle', only_cct=False):
-
+            thread=1, saving_format='instance', only_cct=False):
     circuit.Circuit.PROPERTIES = circuit_config
     Generation.PROPERTIES = circuit_config
     Individual.TARGETS = spea2_config["targets"]
     Individual.CONSTRAINTS = spea2_config["constraints"]
     Individual.constraint_operations = [x for x in Individual.CONSTRAINTS.keys()]
     THREAD = thread
-
     N = spea2_config["N"]
     MAXIMUM_GEN = spea2_config["maximum_generation"]
-
+    output_path = circuit_config["path_to_output"]
     kii = 0
+
     # Create first generation with N individual
     generation = Generation(N, kii)
 
@@ -31,8 +31,7 @@ def process(circuit_config, spea2_config, path,
     # data as numpy arrays in memory would be the best choice for
     # high number of generation and individuals. Otherwise,
     # set saving_format='instance'
-    # generation_pool = GenerationPool(saving_format='numpy')
-    # generation_pool.append(generation)
+    generation_pool = GenerationPool(saving_format, only_cct)
 
     # Initialize the first generation. Either with Randomly,
     # or using Low-discrepancy sequence.
@@ -48,6 +47,9 @@ def process(circuit_config, spea2_config, path,
     # will be the same.
     generation.archive_inds = generation.individuals
 
+    # Append to the pool
+    generation_pool.append(generation)
+
     # With the help of the assigned fitness values, the algorithm
     # can now produce the next generation.
     next_generation = EvolutionaryAlgorithm(generation, generation).produce()
@@ -56,6 +58,9 @@ def process(circuit_config, spea2_config, path,
         # Increase the current generation number
         kii += 1
         print("# Gen: ", kii)
+
+        # Append the last generation
+        generation_pool.append(next_generation)
 
         # Now simulate the new generation in order to calculate
         # performance values of the each circuit generation has.
@@ -75,3 +80,7 @@ def process(circuit_config, spea2_config, path,
         # Create a shallow copy of new generation and overrides generation
         generation = next_generation
         next_generation = new_generation
+
+    # Save pool to the path_to_output
+    generation_pool.save(output_path, circuit_config["name"], kii)
+    return generation_pool.saved_file_path
