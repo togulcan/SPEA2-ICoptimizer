@@ -7,7 +7,8 @@ import argparse
 from src import FileHandler, process
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--only_cct", help="optional argument for saving the fitness data.",
+parser.add_argument("--only_cct",
+                    help="optional argument for saving the fitness data.",
                     action='store_true')
 parser.add_argument("--config_path", help="path to configuration .yaml file")
 parser.add_argument("--saving_mode", help="this should be either 'numpy' or 'instance'")
