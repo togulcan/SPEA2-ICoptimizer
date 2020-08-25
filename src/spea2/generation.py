@@ -105,59 +105,63 @@ class GenerationPool:
                  spea2_config=None):
         self.saving_format = saving_format
         self.only_cct = only_cct
-        self.pool = []
         self.saved_file_path = None
         self.circuit_config = circuit_config
+
+        m = spea2_config["maximum_generation"]
+        n = spea2_config["N"]
+        l = len(circuit_config["topology"])
+
         if saving_format == 'numpy':
-            self.parameters = np.zeros((
-                spea2_config["N"],
-                len(spea2_config["topology"]),
-                spea2_config["maximum_generation"]
-            ), dtype=float)
-            for k in circuit_config:
-                setattr(self, k, np.zeros((spea2_config["N"],
-                                           spea2_config["maximum_generation"]),
+            self.parameters = np.zeros((m, n, l), dtype=float)
+            self.arch_parameters = np.zeros((m, n, l), dtype=float)
+            for k in circuit_config["output"]:
+                setattr(self, k, np.zeros((spea2_config["maximum_generation"],
+                                           spea2_config["N"]),
                                           dtype=float))
+                setattr(self, "arch_" + k, np.zeros((spea2_config["maximum_generation"],
+                                                     spea2_config["N"]),
+                                                    dtype=float))
+        else:
+            self.pool = []
 
     def append(self, generation):
         if self.saving_format == 'instance':
             self._append_as_instance(generation)
         elif self.saving_format == 'numpy':
-            pass
+            self._append_as_nparray(generation)
         else:
             raise ValueError(f"Could not recognized {self.saving_format}")
 
     def save(self, saving_path, cct_name, kii):
-        if self.saving_format == 'instance':
-            self._save_as_instance(saving_path, cct_name, kii)
-        elif self.saving_format == 'numpy':
-            self._save_as_numpy(saving_path, cct_name, kii)
-
-    def _save_as_instance(self, path, cct_name, kii):
         today = datetime.now()
         file_name = today.strftime(cct_name + " d-%Y.%m.%d h-%H.%M ")
         file_name += 'gen-0to' + str(kii)
-        with open(path + file_name, 'wb') as f:
-            pickle.dump(self.pool, f)
-        self.saved_file_path = path + file_name
+        with open(saving_path + file_name, 'wb') as f:
+            pickle.dump(self, f)
+        self.saved_file_path = saving_path + file_name
 
-    def _save_as_numpy(self, path, cct_name, kii):
-        pass
+    @classmethod
+    def load(cls, loading_path):
+        with open(loading_path, 'rb') as f:
+            return pickle.load(f)
 
     def _append_as_instance(self, generation):
         generation_ = copy.deepcopy(generation)
         if self.only_cct:
-            for ind, arc_ind in zip(generation_.individuals,
-                                    generation_.archive_inds):
-                ind_keys = list(ind.__dict__.keys())
-                arc_ind_keys = list(arc_ind.__dict__.keys())
-                for key in ind_keys:
-                    if key != "circuit" and hasattr(ind, key):
-                        delattr(ind, key)
-                for key in arc_ind_keys:
-                    if key != "circuit" and hasattr(arc_ind, key):
-                        delattr(arc_ind, key)
+            generation_.individuals = [copy.deepcopy(ind).circuit
+                                       for ind in generation.individuals]
+            generation_.archive_inds = [copy.deepcopy(ind).circuit
+                                        for ind in generation.individuals]
         self.pool.append(generation_)
 
     def _append_as_nparray(self, generation):
-        pass
+        for attr in self.__dict__:
+            attr_obj = getattr(self, attr)
+            if isinstance(attr_obj, np.ndarray):
+                if attr.startswith('arch_'):
+                    attr_obj[generation.kii] = [getattr(ind.circuit, attr.replace('arch_',''))
+                                                for ind in generation.archive_inds]
+                else:
+                    attr_obj[generation.kii] = [getattr(ind.circuit, attr)
+                                                for ind in generation.individuals]
