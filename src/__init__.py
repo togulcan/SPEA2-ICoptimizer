@@ -53,7 +53,8 @@ def process(circuit_config, spea2_config, path,
 
     # With the help of the assigned fitness values, the algorithm
     # can now produce the next generation.
-    next_generation = EvolutionaryAlgorithm(generation, generation).produce()
+    algorithm = EvolutionaryAlgorithm(generation, generation)
+    next_generation = algorithm.produce()
 
     while kii < MAXIMUM_GEN - 1:
         # Increase the current generation number
@@ -62,7 +63,7 @@ def process(circuit_config, spea2_config, path,
 
         # Now simulate the new generation in order to calculate
         # performance values of the each circuit generation has.
-        next_generation.simulate(path=path, multithread=THREAD)
+        next_generation.simulate(path=path, multithread=THREAD, algorithm=algorithm)
 
         # Assign fitness instance to the new generation and arch_fitness
         # instance to the generation before.
