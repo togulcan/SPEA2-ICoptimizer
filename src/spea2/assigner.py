@@ -11,6 +11,12 @@ class FitnessAssigner:
 
     @classmethod
     def assign_fitness_first(cls, gen):
+        """
+        Assign fitness values for the first generation. kii=0
+
+        Args:
+            gen (generation.Generation): the first generation
+        """
         normalize_constants = get_normalize_constants(gen.individuals)
         for ind1 in gen.individuals:
             for j, ind2 in enumerate(gen.individuals):
@@ -38,6 +44,10 @@ class FitnessAssigner:
         """
         Assign fitness values to the generation and archive
         generation whose kii>1.
+
+        Args:
+            next_gen (generation.Generation): the last generation
+            gen (generation.Generation): the before generation
         """
         self._assign_total_error(
             next_gen.individuals, gen.archive_inds
@@ -71,6 +81,12 @@ class FitnessAssigner:
 
     @staticmethod
     def _assign_total_error(inds, arch_inds):
+        """
+        Assign errors to the individuals.
+        Args:
+            inds (individual.Individual):
+            arch_inds (individual.Individual):
+        """
         for ind, arch_ind in zip(inds, arch_inds):
             ind.fitness.total_error = calculate_total_error(ind)
             arch_ind.arch_fitness.total_error = calculate_total_error(arch_ind)
@@ -109,7 +125,16 @@ class FitnessAssigner:
 
     @staticmethod
     def _assign_distance(inds, arch_inds, normalize, normalize_arc):
-        """ Assign distance values to new generation """
+        """
+        Assign distance values to new generation.
+
+        Args:
+            inds (individual.Individual):
+            arch_inds (individual.Individual):
+            normalize (List[float]): the highest values for each targets among individuals.
+            normalize_arc (List[float]): the highest values for each targets among
+                individuals in aarchive.
+        """
         for ind1, arch_ind1 in zip(inds, arch_inds):
             d1 = [0.0] * len(inds)
             d2 = [0.0] * len(inds)
@@ -121,6 +146,7 @@ class FitnessAssigner:
 
     @staticmethod
     def _assign_fitness(inds, arch_inds, kii):
+        """ Assign total fitness values to individual.fitness """
         normalize_rawfitness = max([ind.fitness.rawfitness for ind in inds])
         normalize_rawfitness_arch = max(
             [ind.fitness.rawfitness for ind in arch_inds])

@@ -21,6 +21,7 @@ class Generation:
         self.archive_inds: List[Individual] = []
 
     def population_initialize(self, initializer_type: str):
+        """ Initialize the first generation. """
         for _ in range(self.N):
             circuit = CircuitCreator.create(
                 circuit_type=self.PROPERTIES['type'],
@@ -30,8 +31,19 @@ class Generation:
             self.individuals.append(new_individual)
 
     @classmethod
-    def new_generation_from_parameters(cls,
-                                       parameters, N, kii):
+    def new_generation_from_parameters(cls, parameters, N, kii):
+        """
+        Form a generation when all parameters for individual.circuit
+        is given.
+
+        Args:
+            parameters (List[Union[List[float], numpy.ndarray]]):
+            N (int): number of individuals each generation has.
+            kii (int): generation number.
+
+        Returns:
+            gen(generation.Generation)
+        """
         gen = Generation(N=N, kii=kii)
         for params in parameters:
             circuit = CircuitCreator.create(
@@ -65,6 +77,20 @@ class Generation:
             self._simulate_inds(path, self.individuals, multithread, algorithm)
 
     def _simulate_inds(self, path, inds, multithread, algorithm=None):
+        """
+        When multithread process is activated the given individuals are
+        simulated in this method. For each thread to perform simulation
+        in one folder, duplicates folders have been created and each thread
+        has its own path. In order to avoid race condition Lock objects
+        are created and assigned to each thread.
+
+        Args:
+            path (str): path to root circuit folder
+            inds (List[Individual]): individuals to simulate
+            multithread (int): number of threads to be used
+            algorithm (algorithm.EvolutionaryAlgorithm): If a circuit
+                fails, algorithm is being used to generate new individual.
+        """
         path_pool = tuple(path + str(x) + '\\' for x in range(8))
         lock_pool = tuple(Lock() for _ in range(8))
         indx_to_sim = range(len(inds))
@@ -74,7 +100,8 @@ class Generation:
             with ThreadPoolExecutor(max_workers=multithread) as executor:
                 for x, path_, lock_ in zip(
                         indx_to_sim, it.cycle(path_pool), it.cycle(lock_pool)):
-                    futures.append(executor.submit(inds[x].circuit.simulate, path_, lock_))
+                    futures.append(
+                        executor.submit(inds[x].circuit.simulate, path_, lock_))
             wait(futures)
             for n, future in zip(indx_to_sim, futures):
                 if future.exception() is not None:
@@ -107,6 +134,7 @@ class GenerationPool:
         self.only_cct = only_cct
         self.saved_file_path = None
         self.circuit_config = circuit_config
+        self.pool = []
 
         m = spea2_config["maximum_generation"]
         n = spea2_config["N"]
@@ -116,16 +144,11 @@ class GenerationPool:
             self.parameters = np.zeros((m, n, l), dtype=float)
             self.arch_parameters = np.zeros((m, n, l), dtype=float)
             for k in circuit_config["output"]:
-                setattr(self, k, np.zeros((spea2_config["maximum_generation"],
-                                           spea2_config["N"]),
-                                          dtype=float))
-                setattr(self, "arch_" + k, np.zeros((spea2_config["maximum_generation"],
-                                                     spea2_config["N"]),
-                                                    dtype=float))
-        else:
-            self.pool = []
+                setattr(self, k, np.zeros((m, n), dtype=float))
+                setattr(self, "arch_" + k, np.zeros((m, n), dtype=float))
 
     def append(self, generation):
+        """ Append the generation to generationpool. """
         if self.saving_format == 'instance':
             self._append_as_instance(generation)
         elif self.saving_format == 'numpy':
@@ -147,6 +170,7 @@ class GenerationPool:
             return pickle.load(f)
 
     def _append_as_instance(self, generation):
+        """ Append the generation object itself. """
         generation_ = copy.deepcopy(generation)
         if self.only_cct:
             generation_.individuals = [copy.deepcopy(ind).circuit
@@ -156,11 +180,13 @@ class GenerationPool:
         self.pool.append(generation_)
 
     def _append_as_nparray(self, generation):
+        """ Append only float values in generaiton.individuals. """
         for attr in self.__dict__:
             attr_obj = getattr(self, attr)
             if isinstance(attr_obj, np.ndarray):
                 if attr.startswith('arch_'):
-                    attr_obj[generation.kii] = [getattr(ind.circuit, attr.replace('arch_',''))
+                    attr_obj[generation.kii] = [getattr(ind.circuit,
+                                                        attr.replace('arch_', ''))
                                                 for ind in generation.archive_inds]
                 else:
                     attr_obj[generation.kii] = [getattr(ind.circuit, attr)

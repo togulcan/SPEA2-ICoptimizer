@@ -1,15 +1,14 @@
 import numpy as np
+from typing import List
 from random import randrange, uniform, choices
 
 from .generation import Generation
 from .individual import Individual
 
 
-def _single_mating(gen):
-    """ Choose a parent from archive randomly """
-
+def _single_mating(gen: Generation) -> Individual:
+    """ Choose a parent from archive randomly. """
     parent1, parent2 = choices(gen.archive_inds, k=2)
-
     if hasattr(parent1, 'coming_from') and hasattr(parent2, 'coming_from'):
         if parent1.coming_from == 'last_gen':
             fitness1 = parent1.fitness.fitness
@@ -34,7 +33,13 @@ def _single_mating(gen):
         return parent1
 
 
-def _single_mutation(ind, upper_bound, lower_bound):
+def _single_mutation(ind: Individual,
+                     upper_bound: List[float],
+                     lower_bound: List[float]) -> Individual:
+    """
+    Randomly assign boolean to mutation, if true change the parameters
+    of the individual.circuit randomly between upper and lower bound.
+    """
     mutation_step_size = 0.1 + 0.2 * uniform(0, 1)
     mutation = True if uniform(0, 1) > mutation_step_size else False
 
@@ -77,7 +82,7 @@ class EvolutionaryAlgorithm:
             #     seen = set()
 
     def cross_mutation_pool(self):
-        """ Apply mutation to randomly selected children"""
+        """ Apply crossover and mutation to randomly selected children"""
         recombination_coefficient = 0.8
         while True:
             parent1, parent2 = yield
@@ -98,7 +103,11 @@ class EvolutionaryAlgorithm:
                                               circuit2.PROPERTIES['lower_bound'])
             yield mutated_child1, mutated_child2
 
-    def select_archive(self):
+    def select_archive(self) -> List[Individual]:
+        """
+        Form list of individuals which are selected as archive
+        individuals of the last generation.
+        """
         archive_inds_temp = set()
         for ind, arch_ind in zip(self.next_gen.individuals, self.gen.archive_inds):
             if ind.fitness.fitness == 0 and ind.fitness.total_error == 0:
