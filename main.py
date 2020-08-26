@@ -62,12 +62,20 @@ if __name__ == "__main__":
     # stop time_perf counter
     stop = time.perf_counter()
 
+    constraints_as_str = [k + '->' + i + ':' + str(j)
+                          for k, v in SPEA2_PROPERTIES['constraints'].items()
+                          for i, j in v.items()]
     logger.info(f"\nTime took for the whole process: {(stop - start) / 60} min."
                 f"\nMaximum generation: {SPEA2_PROPERTIES['maximum_generation']} "
                 f"with {SPEA2_PROPERTIES['N']} individuals for each generation."
                 f"\nNumber of threads used: {multi_thread}"
                 f"\nSaving Format: {saving_mode}"
-                f"\nSaved to {saved_file_path} file.\n")
+                f"\nSaved to {saved_file_path} file."
+                f"\nTargets: {', '.join([k + '->' + v for k, v in SPEA2_PROPERTIES['targets'].items()])}"
+                f"\nConstraints: {', '.join(constraints_as_str)}"
+                f"\nTopology: {CIRCUIT_PROPERTIES['topology']}"
+                f"\nUpper bound: {CIRCUIT_PROPERTIES['upper_bound']}"
+                f"\nLower bound: {CIRCUIT_PROPERTIES['lower_bound']}\n")
 
     # Delete the temp folder
     file_handler.delete_simulation_environment()
