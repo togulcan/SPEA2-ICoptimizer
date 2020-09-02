@@ -7,19 +7,26 @@ from .spea2 import (
 )
 
 
-def process(circuit_config, spea2_config, path,
+def process(circuit_config: dict, spea2_config: dict, path: str,
             thread=1, saving_format='instance', only_cct=False):
+    """
+    The whole process is going under this function. After iterating
+    the generations to the maximum_generation the data will be pickled
+    to the path.
+    """
+    # Assign configuration to class variables. Note that these are
+    # runtime assignment and can not be pickled.
     circuit.Circuit.PROPERTIES = circuit_config
     Generation.PROPERTIES = circuit_config
     Individual.TARGETS = spea2_config["targets"]
     Individual.CONSTRAINTS = spea2_config["constraints"]
     Individual.constraint_operations = [x for x in Individual.CONSTRAINTS.keys()]
     THREAD = thread
+    kii = 0
     N = spea2_config["N"]
     MAXIMUM_GEN = spea2_config["maximum_generation"]
     output_path = circuit_config["path_to_output"]
-    kii = 0
-    
+
     # Create first generation with N individual
     generation = Generation(N, kii)
 
