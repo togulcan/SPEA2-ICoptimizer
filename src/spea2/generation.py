@@ -113,8 +113,9 @@ class Generation:
             if failed_inds:
                 indx_to_sim = failed_inds
                 if algorithm is not None:
+                    ind_generator = algorithm.produce_new_individual()
                     for n in failed_inds:
-                        inds[n] = algorithm.produce_new_individual()
+                        inds[n] = next(ind_generator)
                 else:
                     for n in failed_inds:
                         circuit = CircuitCreator.create(
