@@ -3,6 +3,10 @@ from abc import ABCMeta, abstractmethod
 
 
 class SimulationFailedError(BaseException):
+    """
+    This exception will be raised when simulator failed
+    to calculate the performance of the circuit.
+    """
 
     def __init__(self, *args):
         if args:
@@ -16,6 +20,9 @@ class SimulationFailedError(BaseException):
 
 
 class BaseSimulator(metaclass=ABCMeta):
+    """
+    Abstract base class for any type of simulator.
+    """
 
     def __init__(self, path: str):
         self.path = path
