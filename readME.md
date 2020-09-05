@@ -17,7 +17,7 @@ problem. They thoroughly scan the design space
 and choose the non-dominated solutions to reach a final Pareto
 optimal front (POF).
 
-####Background
+### Background
 
 Many analog circuit sizing tools can be found in literature. 
 The most common type is optimization-based tools.
