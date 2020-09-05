@@ -11,7 +11,8 @@ This is a high level, multi-threaded and pure-python implementation of SPEA2 (St
 on IC (Integrated Circuit) optimization where circuits with best performance are obtained despite the 
 trade-off among the objectives.
 
-Multi-objective optimization (MOO) algorithms are frequently employed in circuit optimization and evolutionary
+Multi-objective optimization (MOO) algorithms are frequently deployed
+ in circuit optimization and evolutionary
 algorithms are especially popular due to nonlinearity of the
 problem. They thoroughly scan the design space
 and choose the non-dominated solutions to reach a final Pareto
@@ -42,7 +43,7 @@ environment (Python3.7 or greater required) then activate it.
 After, install dependencies with the following command:
 
 ````
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ````
 
 If you will use HSpice as high level simulator install it and 
