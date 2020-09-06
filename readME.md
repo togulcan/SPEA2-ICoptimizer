@@ -69,7 +69,7 @@ $ python main.py --only_cct --config_path=configs.yaml --saving_mode=numpy --thr
 - config_path: path to configs.yaml
 - saving_mode: if equals 'instance' the data will be saved as instance of Generation. 
 if equals 'numpy' the data will be appended to a numpy.ndarray
-- thread: number of thread to be used. 
+- thread: number of threads to be used. 
 
 It is recommended to set saving_mode to 'numpy' when the number of generation and the
 number of individual are excessively high where memory footprint is a critical concern.
@@ -141,5 +141,12 @@ again these specifications (gain, bw, pm, zsarea etc.) should be defined in your
 ``AtrributeError`` exception will be raised during the process.
 
 In the above example, gain and bandwidth of the Single Stage Amplifier are the objectives and should be maximized.
-After the process, the POF of last generation should looks like:
+
+### Example
+
+After the process, the POF of the example above should look like:
+
+![Example of SSA](https://github.com/togulcan/SPEA2-ICoptimizer/blob/master/docs/pof.png)
+
+
 
