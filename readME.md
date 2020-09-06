@@ -49,7 +49,7 @@ $ pip install -r requirements.txt
 If you will use HSpice as high level simulator install it and 
 make sure it can be successfully called from terminal. You can see how 
 the program calls the command in ``src.simulators.HSpiceSimulator`` class. 
-If, however, you want to use another simulator you need to implement it.
+If, however, you want to use another simulator you need to implement it by inheriting from `BaseSimulator`.
 
 Circuit files that are used to simulate should be in ``circuitfiles/<circuit_name>/`` and
 specified in ``configs.yaml`` file. Before launching the process make sure your circuit 
@@ -71,8 +71,8 @@ $ python main.py --only_cct --config_path=configs.yaml --saving_mode=numpy --thr
 if equals 'numpy' the data will be appended to a numpy.ndarray
 - thread: number of threads to be used. 
 
-It is recommended to set saving_mode to 'numpy' when the number of generation and the
-number of individual are excessively high where memory footprint is a critical concern.
+It is recommended to set saving_mode to 'numpy' when the number of generations and the
+number of individuals are excessively high where memory footprint is a critical concern.
 
 
 ### Configurations
@@ -144,9 +144,34 @@ In the above example, gain and bandwidth of the Single Stage Amplifier are the o
 
 ### Example
 
-After the process, the POF of the example above should look like:
+After the process, the POF of the last generation of SSA example above should look like:
 
 ![Example of SSA](https://github.com/togulcan/SPEA2-ICoptimizer/blob/master/docs/pof.png)
 
+Conclusion
+==========
 
+- An efficient multi-objective IC optimizer using SPEA2 algorithm 
+has been proposed and its results has been showed. Due to flexibility of the code any type of 
+circuit and simulator can be implemented easily.
 
+- The algorithm can be used only when there is a trade-off between objectives, otherwise the optimization
+would be meaningless.
+
+References
+==========
+1. E. Zitzler, M. Laumanns, and L. Thiele, “SPEA2: Improving the
+strength pareto evolutionary algorithm,” *TIK-report*, vol. 103, 2001.
+
+2.  P. Czyzzak and A. Jaszkiewicz, “Pareto simulated annealing- a meta
+heuristic technique for multiple-objective combinatorial optimization,” 
+*Journal of Multi-Criteria Decision Analysis*, vol. 7, pp. 34–47, 1998.
+
+3. R. Phelps and et. al., “ANACONDA: simulation-based synthesis of
+analog circuits via stochastic pattern search,” *IEEE Transactions on
+Computer-Aided Design of Integrated Circuits and Systems*, vol. 19,
+no. 6, pp. 703–717, June 2000.
+
+4. G. Berkol and et. al., “A novel yield aware multi-objective analog
+circuit optimization tool,” in *2015 IEEE International Symposium on
+Circuits and Systems (ISCAS)*. IEEE, 2015, pp. 2652–2655.
