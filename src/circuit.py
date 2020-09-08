@@ -2,6 +2,7 @@ import math
 import numpy as np
 from abc import ABCMeta, abstractmethod
 from typing import Union, List
+from threading import Lock
 
 from .simulators import HSpiceSimulator, SimulationFailedError
 
@@ -97,11 +98,10 @@ class Circuit(metaclass=ABCMeta):
                 avoiding race condition between threads
                 in folders.
         """
+        if lock is None:
+            lock = Lock()
         try:
-            if lock is not None:
-                with lock:
-                    self.run_HSPICE(path)
-            else:
+            with lock:
                 self.run_HSPICE(path)
         except SimulationFailedError:
             raise
@@ -126,7 +126,7 @@ class AnalogCircuit(Circuit):
     def pm(self):
         if hasattr(self, "himg") and hasattr(self, "hreal"):
             if (self.himg > 0 and self.hreal > 0) or (self.himg < 0 and self.hreal < 0):
-                return np.arctan(self.himg / self.hreal) * 180 / math.pi
+                return np.arctan(self.himg / self.hreal) * (180 / math.pi)
             elif self.himg > 0 and self.hreal < 0:
                 return 0.1
             else:
