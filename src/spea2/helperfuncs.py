@@ -59,11 +59,10 @@ def calculate_fitness_value(fitness,
         fit = fitness.rawfitness / normalize_rawfitness \
             + fitness.total_error * (20 + kii ** 4) * 1e-8\
             + 0.1 / (fitness.distance + 2)
-        return fit
     else:
         fit = fitness.total_error * (20 + kii ** 4) * 1e-8 \
             + 0.1 / (fitness.distance + 2)
-        return fit
+    return fit
 
 
 def calculate_total_error(ind) -> float:
