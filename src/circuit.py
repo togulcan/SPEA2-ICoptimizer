@@ -20,7 +20,7 @@ class Circuit(metaclass=ABCMeta):
 
     """
 
-    PROPERTIES = None
+    PROPERTIES = {}
 
     def __init__(self,
                  parameters: Union[List[float], List[int], np.ndarray]):

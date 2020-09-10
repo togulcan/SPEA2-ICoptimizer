@@ -2,9 +2,10 @@ from .fitness import Fitness
 
 
 class Individual:
-    TARGETS = None
-    CONSTRAINTS = None
-    constraint_operations = None
+    TARGETS = {}
+    CONSTRAINTS = {}
+    constraint_operations = []
+    constraint_constants = []
 
     def __init__(self, circuit, N):
         self.circuit = circuit

@@ -12,7 +12,7 @@ from .individual import Individual
 
 
 class Generation:
-    PROPERTIES = None
+    PROPERTIES = {}
 
     def __init__(self, N: int = None, kii: int = None):
         self.N = N
