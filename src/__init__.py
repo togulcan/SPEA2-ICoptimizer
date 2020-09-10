@@ -20,8 +20,10 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
     Generation.PROPERTIES = circuit_config
     Individual.TARGETS = spea2_config["targets"]
     Individual.CONSTRAINTS = spea2_config["constraints"]
-    Individual.constraint_operations = [next(iter(x)) for x in Individual.CONSTRAINTS.values()]
-    Individual.constraint_constants = [next(iter(x.values())) for x in Individual.CONSTRAINTS.values()]
+    Individual.constraint_operations = [next(iter(x))
+                                        for x in Individual.CONSTRAINTS.values()]
+    Individual.constraint_constants = [next(iter(x.values()))
+                                       for x in Individual.CONSTRAINTS.values()]
     MAXIMUM_GEN = spea2_config["maximum_generation"]
     output_path = circuit_config["path_to_output"]
     N = spea2_config["N"]

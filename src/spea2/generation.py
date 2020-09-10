@@ -147,6 +147,8 @@ class GenerationPool:
             for k in circuit_config["output"]:
                 setattr(self, k, np.zeros((m, n), dtype=float))
                 setattr(self, "arch_" + k, np.zeros((m, n), dtype=float))
+            setattr(self, "pm", np.zeros((m, n), dtype=float))
+            setattr(self, "arch_pm", np.zeros((m, n), dtype=float))
 
     def append(self, generation):
         """ Append the generation to generationpool. """
