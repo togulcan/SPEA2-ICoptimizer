@@ -4,8 +4,6 @@ import time
 import logging
 import argparse
 
-from src import FileHandler, process
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--only_cct",
                     help="optional argument for saving the fitness data.",
@@ -45,6 +43,8 @@ if not os.path.isdir(CIRCUIT_PROPERTIES["path_to_output"]):
                      f"{CIRCUIT_PROPERTIES['path_to_output']}")
 
 if __name__ == "__main__":
+    from src import FileHandler, process
+
     # Create temp folder to perform simulations
     file_handler = FileHandler(CIRCUIT_PROPERTIES['path_to_circuit'])
     file_handler.form_simulation_environment(multi_thread)
