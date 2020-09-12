@@ -49,6 +49,8 @@ class FitnessAssigner:
             next_gen (generation.Generation): the last generation
             gen (generation.Generation): the before generation
         """
+        gen.reset_arch_fitness()
+
         self._assign_total_error(
             next_gen.individuals, gen.archive_inds
         )
