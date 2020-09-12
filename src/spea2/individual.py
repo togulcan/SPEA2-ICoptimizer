@@ -36,3 +36,6 @@ class Individual:
     def constraint_values(self):
         return [getattr(self.circuit, cons_name) 
                 for cons_name in self.CONSTRAINTS.keys()]
+
+    def reset_arch_fitness(self, N):
+        self.arch_fitness = Fitness(N)

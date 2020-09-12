@@ -125,6 +125,10 @@ class Generation:
             else:
                 return
 
+    def reset_arch_fitness(self):
+        for ind in self.archive_inds:
+            ind.reset_arch_fitness(self.N)
+
 
 class GenerationPool:
 
