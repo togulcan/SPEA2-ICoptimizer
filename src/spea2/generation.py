@@ -115,7 +115,7 @@ class Generation:
                 if algorithm is not None:
                     ind_generator = algorithm.produce_new_individual()
                     for n in failed_inds:
-                        inds[n] = next(ind_generator)
+                        inds[n], _ = next(ind_generator)
                 else:
                     for n in failed_inds:
                         circuit = CircuitCreator.create(
