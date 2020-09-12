@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List
 from random import randrange, uniform, choices
+from operator import attrgetter
 
 from .generation import Generation
 from .individual import Individual
@@ -109,34 +110,33 @@ class EvolutionaryAlgorithm:
         individuals of the last generation.
         """
         archive_inds_temp = set()
-        for ind, arch_ind in zip(self.next_gen.individuals, self.gen.archive_inds):
-            if ind.fitness.fitness == 0 and ind.fitness.total_error == 0:
+        for ind in self.next_gen.individuals:
+            if ind.fitness.rawfitness == 0 and ind.fitness.total_error == 0:
                 if ind not in archive_inds_temp:
                     archive_inds_temp.add(ind)
                     ind.coming_from = 'last_gen'
-
-            if arch_ind.arch_fitness.fitness == 0 and \
+        for arch_ind in self.gen.archive_inds:
+            if arch_ind.arch_fitness.rawfitness == 0 and \
                     arch_ind.arch_fitness.total_error == 0:
                 if arch_ind not in archive_inds_temp:
                     archive_inds_temp.add(arch_ind)
                     arch_ind.coming_from = 'last_arch'
 
-        all_fitness_temp = [ind.fitness.fitness for ind in self.next_gen.individuals] + \
-                           [ind.fitness.fitness for ind in self.gen.archive_inds]
-        indexes = sorted(range(len(all_fitness_temp)),
-                         key=lambda k: all_fitness_temp[k])
-
         if len(archive_inds_temp) < self.next_gen.N:
             i = 0
+            sorted_next_gen_inds = sorted(self.next_gen.individuals,
+                                          key=attrgetter('fitness.fitness'))
+            gen_archive_inds = sorted(self.gen.archive_inds,
+                                      key=attrgetter('arch_fitness.fitness'))
             while len(archive_inds_temp) < self.next_gen.N:
-                if indexes[i] < self.next_gen.N:
-                    if self.next_gen.individuals[indexes[i]] not in archive_inds_temp:
-                        ind_to_append = self.next_gen.individuals[indexes[i]]
+                if i < self.next_gen.N:
+                    if sorted_next_gen_inds[i] not in archive_inds_temp:
+                        ind_to_append = sorted_next_gen_inds[i]
                         archive_inds_temp.add(ind_to_append)
                         ind_to_append.coming_from = 'last_gen'
                 else:
-                    if self.gen.archive_inds[indexes[i] - self.gen.N] not in archive_inds_temp:
-                        ind_to_append = self.gen.archive_inds[indexes[i] - self.gen.N]
+                    if gen_archive_inds[i - self.gen.N] not in archive_inds_temp:
+                        ind_to_append = gen_archive_inds[i - self.gen.N]
                         archive_inds_temp.add(ind_to_append)
                         ind_to_append.coming_from = 'last_arch'
                 i += 1
@@ -166,12 +166,10 @@ class EvolutionaryAlgorithm:
     def produce(self):
         new_generation = Generation(self.N, self.next_gen.kii + 1)
         new_ind_it = self.produce_new_individual()
-
         while len(new_generation.individuals) < self.N:
             ind1, ind2 = next(new_ind_it)
             new_generation.individuals.append(ind1)
             new_generation.individuals.append(ind2)
         if len(new_generation.individuals) > self.N:
             del new_generation.individuals[-1]
-
         return new_generation
