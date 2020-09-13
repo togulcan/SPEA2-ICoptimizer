@@ -181,7 +181,7 @@ class GenerationPool:
             generation_.individuals = [copy.deepcopy(ind).circuit
                                        for ind in generation.individuals]
             generation_.archive_inds = [copy.deepcopy(ind).circuit
-                                        for ind in generation.individuals]
+                                        for ind in generation.archive_inds]
         self.pool.append(generation_)
 
     def _append_as_nparray(self, generation):
