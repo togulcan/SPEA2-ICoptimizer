@@ -148,6 +148,19 @@ After the process, the POF of the last generation of SSA example above should lo
 
 ![Example of SSA](https://github.com/togulcan/SPEA2-ICoptimizer/blob/master/docs/pof.png)
 
+In the case of 3 dimensional optimization you just need to add an extra objective 
+to config file:
+````yaml
+targets:
+  gain: max
+  bw: max
+  zpower: min
+````
+the algorithm tries to maximize 1/zpower instead of minimizing zpower and the result
+is as follow:
+
+![Example2 of SSA](https://github.com/togulcan/SPEA2-ICoptimizer/blob/master/docs/pof3d.png)
+
 Conclusion
 ==========
 
