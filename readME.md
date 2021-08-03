@@ -60,7 +60,7 @@ correctly if the circuit files are defected the process will be stuck in infinit
 ### Usage Example
 
 ````
-$ python main.py --only_cct --config_path=configs.yaml --saving_mode=numpy --thread=8
+$ python -m spea2 --only_cct --config_path=configs.yaml --saving_mode=numpy --thread=8
 ````
 
 ### Arguments
