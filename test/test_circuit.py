@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from src.circuit import (
+from spea2.IC.circuit import (
     Circuit, AnalogCircuit, DigitalCircuit
 )
 

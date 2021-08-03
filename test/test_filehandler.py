@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from src import FileHandler
+from spea2.filehandler import FileHandler
 
 
 def test_check_required_files():

@@ -1,7 +1,7 @@
 import pytest
 
-from src.spea2 import Generation
-from src.filehandler import FileHandler
+from spea2.algorithm import Generation
+from spea2.filehandler import FileHandler
 
 
 def test_simulate():
