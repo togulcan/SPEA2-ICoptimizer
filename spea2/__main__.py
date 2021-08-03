@@ -1,10 +1,22 @@
-from .circuit import *
+import argparse
+import atexit
+import logging
+import time
+import yaml
+
+from .algorithm import (EvolutionaryAlgorithm, FitnessAssigner, Generation,
+                       GenerationPool, Individual)
 from .filehandler import FileHandler
-from .simulators import HSpiceSimulator, SimulationFailedError
-from .spea2 import (
-    Generation, GenerationPool, FitnessAssigner,
-    EvolutionaryAlgorithm, Individual
-)
+from .IC import *
+
+
+def set_logger():
+    # Set logger configurations.
+    log_format = "%(levelname)s %(asctime)s - %(message)s"
+    logging.basicConfig(filename='logs.log',
+                        format=log_format,
+                        level=logging.INFO)
+    return logging.getLogger()
 
 
 def process(circuit_config: dict, spea2_config: dict, path: str,
@@ -96,3 +108,68 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
     # Save pool to the path_to_output
     generation_pool.save(output_path, circuit_config["name"], kii)
     return generation_pool.saved_file_path
+
+
+if __name__ == "__main__":
+    # Parse the arguments and start the process
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only_cct",
+                        help="optional argument for saving the fitness data.",
+                        action='store_true')
+    parser.add_argument("--config_path",
+                        help="path to configuration .yaml file")
+    parser.add_argument("--saving_mode",
+                        choices=("numpy", "instance"),
+                        default="numpy",
+                        help="output data saving mode.")
+    parser.add_argument("--thread",
+                        choices=range(0, 9),
+                        default=1,
+                        help="number of threads to be used.")
+    args = parser.parse_args()
+
+    logger = set_logger()
+
+    with open(args.config_path) as file:
+        yaml_file = yaml.load(file, Loader=yaml.FullLoader)
+        CIRCUIT_PROPERTIES = yaml_file["Circuit"]
+        SPEA2_PROPERTIES = yaml_file["SPEA2"]
+
+    if not os.path.isdir(CIRCUIT_PROPERTIES["path_to_output"]):
+        raise SystemExit(f"There is no such direction "
+                         f"{CIRCUIT_PROPERTIES['path_to_output']}")
+
+    # Create temp folder to perform simulations
+    file_handler = FileHandler(CIRCUIT_PROPERTIES['path_to_circuit'])
+    file_handler.form_simulation_environment(args.thread)
+    path = file_handler.get_folder_path()
+
+    # Delete simulation environ at the end
+    atexit.register(file_handler.delete_simulation_environment)
+
+    # start time_perf counter.
+    start = time.perf_counter()
+
+    # start the process
+    saved_file_path = process(
+        CIRCUIT_PROPERTIES, SPEA2_PROPERTIES, path,
+        args.thread, args.saving_mode, args.only_cct
+    )
+
+    # stop time_perf counter
+    stop = time.perf_counter()
+
+    constraints_as_str = [k + '->' + i + ':' + str(j)
+                          for k, v in SPEA2_PROPERTIES['constraints'].items()
+                          for i, j in v.items()]
+    logger.info(f"\nTime took for the whole process: {(stop - start) / 60} min."
+                f"\nMaximum generation: {SPEA2_PROPERTIES['maximum_generation']} "
+                f"with {SPEA2_PROPERTIES['N']} individuals for each generation."
+                f"\nNumber of threads used: {args.thread}"
+                f"\nSaving Format: {args.saving_mode}"
+                f"\nSaved to {saved_file_path} file."
+                f"\nTargets: {', '.join([k + '->' + v for k, v in SPEA2_PROPERTIES['targets'].items()])}"
+                f"\nConstraints: {', '.join(constraints_as_str)}"
+                f"\nTopology: {CIRCUIT_PROPERTIES['topology']}"
+                f"\nUpper bound: {CIRCUIT_PROPERTIES['upper_bound']}"
+                f"\nLower bound: {CIRCUIT_PROPERTIES['lower_bound']}\n")

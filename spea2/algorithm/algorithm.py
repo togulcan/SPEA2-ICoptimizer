@@ -1,7 +1,8 @@
-import numpy as np
-from typing import List
-from random import randrange, uniform, choices
 from operator import attrgetter
+from random import choices, randrange, uniform
+from typing import List
+
+import numpy as np
 
 from .generation import Generation
 from .individual import Individual

@@ -1,7 +1,7 @@
 import os
 import threading
-from shutil import copytree, copy2, rmtree
-from contextlib import suppress, contextmanager
+from contextlib import contextmanager, suppress
+from shutil import copy2, copytree, rmtree
 
 _local = threading.local()
 

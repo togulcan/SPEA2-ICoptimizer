@@ -1,13 +1,14 @@
 import copy
-import pickle
 import itertools as it
-import numpy as np
-from typing import List
-from threading import Lock
-from datetime import datetime
+import pickle
 from concurrent.futures import ThreadPoolExecutor, wait
+from datetime import datetime
+from threading import Lock
+from typing import List
 
-from .. import CircuitCreator, SimulationFailedError
+import numpy as np
+
+from ..IC import CircuitCreator, SimulationFailedError
 from .individual import Individual
 
 

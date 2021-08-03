@@ -1,8 +1,9 @@
 import math
-import numpy as np
 from abc import ABCMeta, abstractmethod
-from typing import Union, List
 from threading import Lock
+from typing import List, Union
+
+import numpy as np
 
 from .simulators import HSpiceSimulator, SimulationFailedError
 

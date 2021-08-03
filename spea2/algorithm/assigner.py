@@ -1,10 +1,8 @@
 from heapq import nsmallest
 
-from .helperfuncs import (
-    get_normalize_constants, calculate_distance,
-    compare_targets, calculate_fitness_value,
-    calculate_total_error
-)
+from .helperfuncs import (calculate_distance, calculate_fitness_value,
+                          calculate_total_error, compare_targets,
+                          get_normalize_constants)
 
 
 class FitnessAssigner:
