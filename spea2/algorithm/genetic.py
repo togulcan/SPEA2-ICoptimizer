@@ -8,23 +8,25 @@ from .generation import Generation
 from .individual import Individual
 
 
+def parent_fitness(parent):
+    """ Decide id parent is in last archive or last generation. Return
+        the fitness value of it.
+    """
+    if parent.coming_from == 'last_gen':
+        fitness = parent.fitness.fitness
+    elif parent.coming_from == 'last_arch':
+        fitness = parent.arch_fitness.fitness
+    else:
+        raise ValueError(f"Can not recognized ind.coming_from")
+    return fitness
+
+
 def _single_mating(gen: Generation) -> Individual:
     """ Choose a parent from archive randomly. """
     parent1, parent2 = choices(gen.archive_inds, k=2)
     if hasattr(parent1, 'coming_from') and hasattr(parent2, 'coming_from'):
-        if parent1.coming_from == 'last_gen':
-            fitness1 = parent1.fitness.fitness
-        elif parent1.coming_from == 'last_arch':
-            fitness1 = parent1.arch_fitness.fitness
-        else:
-            raise ValueError(f"Can not recognized ind.coming_from")
-
-        if parent2.coming_from == 'last_gen':
-            fitness2 = parent2.fitness.fitness
-        elif parent2.coming_from == 'last_arch':
-            fitness2 = parent2.arch_fitness.fitness
-        else:
-            raise ValueError(f"Can not recognized ind.coming_from")
+        fitness1 = parent_fitness(parent1)
+        fitness2 = parent_fitness(parent2)
     else:
         fitness1 = parent1.fitness.fitness
         fitness2 = parent2.fitness.fitness

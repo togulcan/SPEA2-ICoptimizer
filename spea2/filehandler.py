@@ -44,15 +44,10 @@ class FileHandler:
             multithread (int): number of threads to be used
 
         """
-
-        if multithread is not None:
-            if not isinstance(multithread, int):
-                raise TypeError(f"Number of multi thread should be an integer")
-            if not 9 > multithread > 0:
-                raise ValueError(f"Number of threads must be in range 1-8 but"
-                                 f"{multithread} was given.")
-
         self.multithread = multithread
+
+        if multithread == 1: return
+
         source = self.path
         source_temp = source[:-1] + '_temp/'
         dests = [source_temp + str(i) for i in range(8)]
@@ -67,6 +62,7 @@ class FileHandler:
 
         with suppress(FileExistsError):
             os.makedirs(source_temp)
+
         for dest in dests:
             with suppress(FileExistsError):
                 os.makedirs(dest)
@@ -87,6 +83,8 @@ class FileHandler:
 
     def delete_simulation_environment(self):
         """ The folders where simulations executed will be deleted. """
+        if self.multithread == 1: return
+
         path = self.get_folder_path()
         try:
             rmtree(path)
