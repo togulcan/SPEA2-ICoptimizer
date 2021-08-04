@@ -2,8 +2,7 @@ import math
 from typing import List
 
 
-def get_normalize_constants(inds, archive_inds = None):
-
+def get_normalize_constants(inds, archive_inds=None):
     """
     In order to normalize targets between 0-1 we need to find
     the maximum values of the targets.
@@ -28,8 +27,11 @@ def get_normalize_constants(inds, archive_inds = None):
             for j in range(len(inds[0].TARGETS))]
 
 
-def calculate_distance(first_ind, second_ind,
-                       normalize_values: List[float]) -> float:
+def calculate_distance(
+        first_ind,
+        second_ind,
+        normalize_values: List[float]
+) -> float:
     """ Calculate the euclidian distance between two individuals."""
     dist = 0.0
     for i, tars in enumerate(zip(
@@ -51,17 +53,19 @@ def compare_targets(first_ind, second_ind) -> bool:
     return True
 
 
-def calculate_fitness_value(fitness,
-                            normalize_rawfitness: int,
-                            kii: int) -> float:
+def calculate_fitness_value(
+        fitness,
+        normalize_rawfitness: int,
+        kii: int
+) -> float:
     """ Calculates and returns final fitness values of each individuals"""
     if normalize_rawfitness != 0:
         fit = fitness.rawfitness / normalize_rawfitness \
-            + fitness.total_error * (20 + kii ** 4) * 1e-8\
-            + 0.1 / (fitness.distance + 2)
+              + fitness.total_error * (20 + kii ** 4) * 1e-8 \
+              + 0.1 / (fitness.distance + 2)
     else:
         fit = fitness.total_error * (20 + kii ** 4) * 1e-8 \
-            + 0.1 / (fitness.distance + 2)
+              + 0.1 / (fitness.distance + 2)
     return fit
 
 

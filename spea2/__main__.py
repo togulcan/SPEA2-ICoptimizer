@@ -4,10 +4,9 @@ import logging
 import time
 import yaml
 
-from .algorithm import (EvolutionaryAlgorithm, FitnessAssigner, Generation,
-                       GenerationPool, Individual)
 from .filehandler import FileHandler
 from .IC import *
+from .algorithm import EvolutionaryAlgorithm, Individual
 
 
 def get_logger():
@@ -19,8 +18,14 @@ def get_logger():
     return logging.getLogger()
 
 
-def process(circuit_config: dict, spea2_config: dict, path: str,
-            thread=1, saving_format='instance', only_cct=False):
+def process(
+        circuit_config: dict,
+        spea2_config: dict,
+        path: str,
+        thread=1,
+        saving_format='instance',
+        only_cct=False
+):
     """
     The whole process is going under this function. After iterating
     the generations to the maximum_generation the data will be pickled
@@ -36,7 +41,7 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
                                         for x in Individual.CONSTRAINTS.values()]
     Individual.constraint_constants = [next(iter(x.values()))
                                        for x in Individual.CONSTRAINTS.values()]
-    
+
     MAXIMUM_GEN = spea2_config["maximum_generation"]
     output_path = circuit_config["path_to_output"]
     N = spea2_config["N"]
@@ -152,8 +157,12 @@ if __name__ == "__main__":
 
     # start the process
     saved_file_path = process(
-        CIRCUIT_PROPERTIES, SPEA2_PROPERTIES, path,
-        args.thread, args.saving_mode, args.only_cct
+        CIRCUIT_PROPERTIES,
+        SPEA2_PROPERTIES,
+        path,
+        args.thread,
+        args.saving_mode,
+        args.only_cct
     )
 
     # stop time_perf counter
@@ -162,7 +171,7 @@ if __name__ == "__main__":
     constraints_as_str = [k + '->' + i + ':' + str(j)
                           for k, v in SPEA2_PROPERTIES['constraints'].items()
                           for i, j in v.items()]
-    
+
     logger.info(f"\nTime took for the whole process: {(stop - start) / 60} min."
                 f"\nMaximum generation: {SPEA2_PROPERTIES['maximum_generation']} "
                 f"with {SPEA2_PROPERTIES['N']} individuals for each generation."

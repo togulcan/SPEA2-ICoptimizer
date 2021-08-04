@@ -15,7 +15,7 @@ from .individual import Individual
 class Generation:
     PROPERTIES = {}
 
-    def __init__(self, N: int = None, kii: int = None):
+    def __init__(self, N, kii):
         self.N = N
         self.kii = kii
         self.individuals: List[Individual] = []
@@ -133,9 +133,13 @@ class Generation:
 
 class GenerationPool:
 
-    def __init__(self, saving_format='instance',
-                 only_cct=False, circuit_config=None,
-                 spea2_config=None):
+    def __init__(
+            self,
+            saving_format='instance',
+            only_cct=False,
+            circuit_config=None,
+            spea2_config=None
+    ):
         self.saving_format = saving_format
         self.only_cct = only_cct
         self.saved_file_path = None

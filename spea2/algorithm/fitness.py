@@ -1,7 +1,10 @@
 class Fitness:
 
-    __slots__ = ("total_error", "strength", "rawfitness",
-                 "distance", "fitness")
+    __slots__ = ("total_error",
+                 "strength",
+                 "rawfitness",
+                 "distance",
+                 "fitness")
 
     def __init__(self, N: int):
         self.total_error = 0.0

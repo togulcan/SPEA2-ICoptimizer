@@ -1,8 +1,10 @@
 from heapq import nsmallest
 
-from .helperfuncs import (calculate_distance, calculate_fitness_value,
-                          calculate_total_error, compare_targets,
-                          get_normalize_constants)
+from .helperfuncs import (
+    calculate_distance, calculate_fitness_value,
+    calculate_total_error, compare_targets,
+    get_normalize_constants
+)
 
 
 class FitnessAssigner:
@@ -26,7 +28,10 @@ class FitnessAssigner:
                     ind1.fitness.rawfitness += 1
 
                 ind1.fitness.distance[j] = calculate_distance(
-                    ind1, ind2, normalize_constants)
+                    ind1,
+                    ind2,
+                    normalize_constants
+                )
 
             ind1.fitness.distance = nsmallest(2, ind1.fitness.distance)[-1]
             ind1.fitness.total_error = calculate_total_error(ind1)
@@ -36,7 +41,10 @@ class FitnessAssigner:
 
         for ind in gen.individuals:
             ind.fitness.fitness = calculate_fitness_value(
-                ind.fitness, max_rawfitnesses, gen.kii)
+                ind.fitness,
+                max_rawfitnesses,
+                gen.kii
+            )
 
     def assign_fitness(self, next_gen, gen):
         """
@@ -50,19 +58,23 @@ class FitnessAssigner:
         gen.reset_arch_fitness()
 
         self._assign_total_error(
-            next_gen.individuals, gen.archive_inds
+            next_gen.individuals,
+            gen.archive_inds
         )
 
         self._assign_strength(
-            next_gen.individuals, gen.archive_inds
+            next_gen.individuals,
+            gen.archive_inds
         )
 
         self._assign_rawfitness(
-            next_gen.individuals, gen.archive_inds
+            next_gen.individuals,
+            gen.archive_inds
         )
 
         distance_normalize = get_normalize_constants(
-            next_gen.individuals, gen.archive_inds
+            next_gen.individuals,
+            gen.archive_inds
         )
 
         distance_normalize_archive = get_normalize_constants(
@@ -70,13 +82,16 @@ class FitnessAssigner:
         )
 
         self._assign_distance(
-            next_gen.individuals, gen.archive_inds,
-            distance_normalize, distance_normalize_archive
+            next_gen.individuals,
+            gen.archive_inds,
+            distance_normalize,
+            distance_normalize_archive
         )
 
         self._assign_fitness(
             next_gen.individuals,
-            gen.archive_inds, next_gen.kii
+            gen.archive_inds,
+            next_gen.kii
         )
 
     @staticmethod
@@ -133,7 +148,7 @@ class FitnessAssigner:
             arch_inds (individual.Individual):
             normalize (List[float]): the highest values for each targets among individuals.
             normalize_arc (List[float]): the highest values for each targets among
-                individuals in aarchive.
+                individuals in archive.
         """
         for ind1, arch_ind1 in zip(inds, arch_inds):
             d1 = [0.0] * len(inds)
@@ -153,7 +168,13 @@ class FitnessAssigner:
 
         for ind, arch_ind in zip(inds, arch_inds):
             ind.fitness.fitness = calculate_fitness_value(
-                ind.fitness, normalize_rawfitness, kii)
+                ind.fitness,
+                normalize_rawfitness,
+                kii
+            )
 
             arch_ind.arch_fitness.fitness = calculate_fitness_value(
-                arch_ind.arch_fitness, normalize_rawfitness_arch, kii)
+                arch_ind.arch_fitness,
+                normalize_rawfitness_arch,
+                kii
+            )

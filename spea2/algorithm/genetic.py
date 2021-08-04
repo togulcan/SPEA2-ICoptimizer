@@ -37,9 +37,11 @@ def _single_mating(gen: Generation) -> Individual:
         return parent1
 
 
-def _single_mutation(ind: Individual,
-                     upper_bound: List[float],
-                     lower_bound: List[float]) -> Individual:
+def _single_mutation(
+        ind: Individual,
+        upper_bound: List[float],
+        lower_bound: List[float]
+) -> Individual:
     """
     Randomly assign boolean to mutation, if true change the parameters
     of the individual.circuit randomly between upper and lower bound.
@@ -64,8 +66,11 @@ def _single_mutation(ind: Individual,
 class EvolutionaryAlgorithm:
     """ SPEA2 evolutionary algorithm class. """
 
-    def __init__(self, generation: Generation,
-                 next_generation: Generation = None):
+    def __init__(
+            self,
+            generation,
+            next_generation=None
+    ):
         self.gen = generation
         self.next_gen = next_generation
         self.N = generation.N
@@ -99,12 +104,16 @@ class EvolutionaryAlgorithm:
                        parent1.circuit * (1 - recombination_coefficient)
             child2 = Individual(circuit2, self.N)
 
-            mutated_child1 = _single_mutation(child1,
-                                              circuit1.PROPERTIES['upper_bound'],
-                                              circuit1.PROPERTIES['lower_bound'])
-            mutated_child2 = _single_mutation(child2,
-                                              circuit2.PROPERTIES['upper_bound'],
-                                              circuit2.PROPERTIES['lower_bound'])
+            mutated_child1 = _single_mutation(
+                child1,
+                circuit1.PROPERTIES['upper_bound'],
+                circuit1.PROPERTIES['lower_bound']
+            )
+            mutated_child2 = _single_mutation(
+                child2,
+                circuit2.PROPERTIES['upper_bound'],
+                circuit2.PROPERTIES['lower_bound']
+            )
             yield mutated_child1, mutated_child2
 
     def select_archive(self) -> List[Individual]:
