@@ -10,7 +10,7 @@ from .filehandler import FileHandler
 from .IC import *
 
 
-def set_logger():
+def get_logger():
     # Set logger configurations.
     log_format = "%(levelname)s %(asctime)s - %(message)s"
     logging.basicConfig(filename='logs.log',
@@ -36,10 +36,10 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
                                         for x in Individual.CONSTRAINTS.values()]
     Individual.constraint_constants = [next(iter(x.values()))
                                        for x in Individual.CONSTRAINTS.values()]
+    
     MAXIMUM_GEN = spea2_config["maximum_generation"]
     output_path = circuit_config["path_to_output"]
     N = spea2_config["N"]
-    THREAD = thread
     kii = 0
 
     # Create first generation with N individual
@@ -85,7 +85,7 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
 
         # Now simulate the new generation in order to calculate
         # performance values of the each circuit generation has.
-        next_generation.simulate(path=path, multithread=THREAD, algorithm=algorithm)
+        next_generation.simulate(path=path, multithread=thread, algorithm=algorithm)
 
         # Assign fitness instance to the new generation and arch_fitness
         # instance to the generation before.
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         help="number of threads to be used.")
     args = parser.parse_args()
 
-    logger = set_logger()
+    logger = get_logger()
 
     with open(args.config_path) as file:
         yaml_file = yaml.load(file, Loader=yaml.FullLoader)
@@ -162,6 +162,7 @@ if __name__ == "__main__":
     constraints_as_str = [k + '->' + i + ':' + str(j)
                           for k, v in SPEA2_PROPERTIES['constraints'].items()
                           for i, j in v.items()]
+    
     logger.info(f"\nTime took for the whole process: {(stop - start) / 60} min."
                 f"\nMaximum generation: {SPEA2_PROPERTIES['maximum_generation']} "
                 f"with {SPEA2_PROPERTIES['N']} individuals for each generation."
