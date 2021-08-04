@@ -61,7 +61,7 @@ def process(circuit_config: dict, spea2_config: dict, path: str,
     generation.population_initialize('Random')
 
     # Simulate the individuals of the generation
-    generation.simulate(path=path, multithread=THREAD)
+    generation.simulate(path=path, multithread=thread)
 
     # Assign fitness instance to the each individual in the generation
     FitnessAssigner.assign_fitness_first(generation)
