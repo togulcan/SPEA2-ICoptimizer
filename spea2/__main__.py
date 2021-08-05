@@ -128,7 +128,7 @@ if __name__ == "__main__":
                         default="numpy",
                         help="output data saving mode.")
     parser.add_argument("--thread",
-                        choices=range(0, 9),
+                        choices=range(1, 9),
                         default=1,
                         help="number of threads to be used.")
     args = parser.parse_args()
