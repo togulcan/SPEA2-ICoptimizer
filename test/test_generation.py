@@ -5,7 +5,7 @@ from spea2.filehandler import FileHandler
 
 
 def test_simulate():
-    path = "C:..\\circuitfiles\\comparator\\"
+    path = "..\\circuitfiles\\comparator\\"
     gen = Generation(600, 0)
     gen.population_initialize("Random")
     file_handler = FileHandler(path)
