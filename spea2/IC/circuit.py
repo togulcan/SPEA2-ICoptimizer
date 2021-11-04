@@ -66,7 +66,7 @@ class Circuit(metaclass=ABCMeta):
     def __sub__(self, obj):
         """Operator overloading for subtracting two Circuit."""
         if not isinstance(self, type(obj)):
-            raise TypeError(f"Can not add {type(self).__name__} type "
+            raise TypeError(f"Can not subtract {type(self).__name__} type "
                             f"with {type(obj).__name__} type.")
         return type(self).__call__(
             np.subtract(self.parameters, obj.parameters))
@@ -82,8 +82,8 @@ class Circuit(metaclass=ABCMeta):
         """Operator overloading for dividing a Circuit by a constant."""
         if isinstance(obj, (float, int)):
             return type(self).__call__(self.parameters / obj)
-        raise TypeError(f"Can not multiply {type(self).__name__} type"
-                        f"with {type(obj).__name__} type.")
+        raise TypeError(f"Can not divide {type(self).__name__} type"
+                        f"by {type(obj).__name__} type.")
 
     @abstractmethod
     def simulate(self, path, lock=None):
